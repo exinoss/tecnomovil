@@ -1,0 +1,32 @@
+<aside class="fixed top-14 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-30 flex flex-col transition-transform duration-300"
+       [style.transform]="isOpen ? 'translateX(0)' : 'translateX(-100%)'">
+
+  <!-- Menú de navegación -->
+  <nav class="flex-1 overflow-y-auto py-4 px-3">
+    <ul class="space-y-1">
+      <li *ngFor="let item of filteredMenu">
+        <a [routerLink]="item.route"
+           routerLinkActive="bg-blue-50 text-blue-600 border-r-2 border-blue-600"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm font-medium"
+           >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="item.icon" />
+          </svg>
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Botón cerrar sesión -->
+  <div class="p-3 border-t border-gray-200">
+    <button (click)="logout()"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors text-sm font-medium">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+      <span>Cerrar Sesión</span>
+    </button>
+  </div>
+</aside>

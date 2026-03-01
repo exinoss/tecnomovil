@@ -1,0 +1,128 @@
+<div class="space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h2 class="text-xl font-bold text-gray-800">Inventario</h2>
+    <div class="flex flex-wrap gap-2">
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()"
+             placeholder="Buscar producto..."
+             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+      <select [(ngModel)]="filterTipo" (ngModelChange)="applyFilter()"
+              class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Todos los tipos</option>
+        <option *ngFor="let t of tiposMovimiento" [value]="t">{{ t }}</option>
+      </select>
+      <button (click)="toggleStockBajo()"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="showStockBajo ? 'bg-red-600 text-white hover:bg-red-700' : 'border border-red-300 text-red-600 hover:bg-red-50'">
+        Stock Bajo
+      </button>
+      <button *ngIf="isAdmin" (click)="openCreate()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
+        + Nuevo Movimiento
+      </button>
+    </div>
+  </div>
+
+  <!-- Stock bajo -->
+  <div *ngIf="showStockBajo" class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <h3 class="font-semibold text-red-800 mb-3">Productos con Stock Bajo</h3>
+    <div *ngIf="productosStockBajo.length === 0" class="text-sm text-red-600">No hay productos con stock bajo</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+      <div *ngFor="let p of productosStockBajo"
+           class="bg-white border border-red-100 rounded-lg p-3 flex items-center justify-between">
+        <div>
+          <p class="font-medium text-gray-800 text-sm">{{ p.nombreProducto }}</p>
+          <p class="text-xs text-gray-500">{{ p.categoria?.nombreCategoria }}</p>
+        </div>
+        <span class="text-red-600 font-bold text-lg">{{ p.stockActual }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-blue-50 text-blue-700 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Producto</th>
+            <th class="px-4 py-3">Tipo</th>
+            <th class="px-4 py-3 text-center">Cantidad</th>
+            <th class="px-4 py-3">Serie/IMEI</th>
+            <th class="px-4 py-3">Detalle</th>
+            <th class="px-4 py-3">Fecha</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="loading">
+            <td colspan="7" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
+          </tr>
+          <tr *ngIf="!loading && filteredMovimientos.length === 0">
+            <td colspan="7" class="px-4 py-8 text-center text-gray-500">No se encontraron movimientos</td>
+          </tr>
+          <tr *ngFor="let m of filteredMovimientos" class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-600">{{ m.idMovimiento }}</td>
+            <td class="px-4 py-3 font-medium text-gray-800">{{ m.producto?.nombreProducto }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="getTipoClass(m.tipo)">
+                {{ m.tipo }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center font-medium"
+                [class]="m.tipo === 'Compra' || m.tipo === 'Devolucion' ? 'text-green-600' : 'text-red-600'">
+              {{ m.tipo === 'Compra' || m.tipo === 'Devolucion' ? '+' : '-' }}{{ m.cantidad }}
+            </td>
+            <td class="px-4 py-3 text-gray-600 text-xs font-mono">{{ m.serial?.numeroSerieImei || '-' }}</td>
+            <td class="px-4 py-3 text-gray-600 text-xs truncate max-w-[200px]">{{ m.detalle || '-' }}</td>
+            <td class="px-4 py-3 text-gray-600 text-xs">{{ m.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal crear movimiento -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="showModal = false"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">Nuevo Movimiento de Inventario</h3>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
+        <select [(ngModel)]="form.idProducto"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option [value]="0" disabled>Seleccione...</option>
+          <option *ngFor="let p of productos" [value]="p.idProducto">{{ p.nombreProducto }} (Stock: {{ p.stockActual }})</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
+          <select [(ngModel)]="form.tipo"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option *ngFor="let t of tiposMovimiento" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
+          <input type="number" [(ngModel)]="form.cantidad" min="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Detalle</label>
+        <textarea [(ngModel)]="form.detalle" rows="2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Descripción del movimiento"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+      <button (click)="showModal = false"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button (click)="save()"
+              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Guardar</button>
+    </div>
+  </div>
+</div>

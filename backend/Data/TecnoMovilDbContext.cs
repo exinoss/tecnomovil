@@ -31,7 +31,7 @@ public class TecnoMovilDbContext : DbContext
 
         // Configuracion - Solo una fila permitida (id_config = 1)
         modelBuilder.Entity<Configuracion>()
-            .HasCheckConstraint("CK_Configuracion_UnaFila", "id_config = 1");
+            .ToTable(tb => tb.HasCheckConstraint("CK_Configuracion_UnaFila", "id_config = 1"));
 
         // Producto_Serial - Número único
         modelBuilder.Entity<ProductoSerial>()
@@ -104,7 +104,34 @@ public class TecnoMovilDbContext : DbContext
             .HasIndex(pa => new { pa.IdAtributo, pa.IdProducto })
             .HasDatabaseName("IX_PA_Atributo");
 
-        // Seed IVA configuración
+        // HasTrigger: evita que EF Core use OUTPUT clause en tablas con triggers
+        modelBuilder.Entity<Factura>()
+            .ToTable(tb =>
+            {
+                tb.HasTrigger("trg_Factura_SetIVA");
+                tb.HasTrigger("trg_DetalleFactura_RecalcularTotales");
+            });
+
+        modelBuilder.Entity<MovimientoInventario>()
+            .ToTable(tb => tb.HasTrigger("trg_MI_AfterInsert"));
+
+        modelBuilder.Entity<DetalleFactura>()
+            .ToTable(tb =>
+            {
+                tb.HasTrigger("trg_DetalleFactura_AfterInsert");
+                tb.HasTrigger("trg_DetalleFactura_RecalcularTotales");
+            });
+
+        modelBuilder.Entity<ReparacionRepuesto>()
+            .ToTable(tb =>
+            {
+                tb.HasTrigger("trg_ReparacionRepuesto_AfterInsert");
+                tb.HasTrigger("trg_RR_ValidarSerialProducto");
+            });
+
+        modelBuilder.Entity<ProductoAtributo>()
+            .ToTable(tb => tb.HasTrigger("trg_PA_ValidarTipo"));
+
         modelBuilder.Entity<Configuracion>().HasData(
             new Configuracion { IdConfig = 1, IvaPorcentaje = 15.00m }
         );

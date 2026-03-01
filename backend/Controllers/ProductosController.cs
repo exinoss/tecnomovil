@@ -101,6 +101,8 @@ public class ProductosController : ControllerBase
         if (producto == null)
             return NotFound(new { message = "Producto no encontrado" });
 
+        bool eraSerializado = producto.EsSerializado;
+
         producto.IdCategoria = dto.IdCategoria;
         producto.NombreProducto = dto.NombreProducto;
         producto.Imagen = dto.Imagen;
@@ -108,6 +110,16 @@ public class ProductosController : ControllerBase
         producto.PrecioVenta = dto.PrecioVenta;
         producto.EsSerializado = dto.EsSerializado;
         producto.Activo = dto.Activo;
+
+        // Si quitaron la serialización, marcar todos sus seriales como Inhabilitado
+        if (eraSerializado && !dto.EsSerializado)
+        {
+            var seriales = await _context.ProductoSeriales
+                .Where(s => s.IdProducto == id)
+                .ToListAsync();
+            foreach (var s in seriales)
+                s.Estado = "Inhabilitado";
+        }
 
         await _context.SaveChangesAsync();
         return Ok(producto);

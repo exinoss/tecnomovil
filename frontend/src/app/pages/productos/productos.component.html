@@ -1,0 +1,514 @@
+<div class="space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h2 class="text-xl font-bold text-gray-800">Productos</h2>
+    <div class="flex flex-wrap gap-2">
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()"
+             placeholder="Buscar producto..."
+             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+      <select [(ngModel)]="filterCategoria" (ngModelChange)="applyFilter()"
+              class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [value]="0">Todas las categorías</option>
+        <option *ngFor="let c of categorias" [value]="c.idCategoria">{{ c.nombreCategoria }}</option>
+      </select>
+      <button (click)="openCreate()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
+        + Agregar
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-blue-50 text-blue-700 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Nombre</th>
+            <th class="px-4 py-3">Categoría</th>
+            <th class="px-4 py-3">Precio</th>
+            <th class="px-4 py-3">Stock</th>
+            <th class="px-4 py-3">Serializado</th>
+            <th class="px-4 py-3">Estado</th>
+            <th class="px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="loading">
+            <td colspan="8" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
+          </tr>
+          <tr *ngIf="!loading && filteredProductos.length === 0">
+            <td colspan="8" class="px-4 py-8 text-center text-gray-500">No se encontraron productos</td>
+          </tr>
+          <tr *ngFor="let p of filteredProductos" class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-600">{{ p.idProducto }}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <img *ngIf="p.imagen" [src]="apiBase + p.imagen" class="w-8 h-8 rounded object-cover" alt="">
+                <div>
+                  <div class="font-medium text-gray-800">{{ p.nombreProducto }}</div>
+                  <div *ngIf="p.descripcion" class="text-xs text-gray-500 truncate max-w-xs">{{ p.descripcion }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-gray-600">{{ p.categoria?.nombreCategoria }}</td>
+            <td class="px-4 py-3 text-gray-800 font-medium">${{ p.precioVenta | number:'1.2-2' }}</td>
+            <td class="px-4 py-3">
+              <span class="font-medium" [ngClass]="p.stockActual <= 5 ? 'text-red-600' : 'text-gray-800'">
+                {{ p.stockActual }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600">{{ p.esSerializado ? 'Sí' : 'No' }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 rounded-full text-xs font-medium"
+                    [ngClass]="p.activo ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'">
+                {{ p.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex justify-end gap-1">
+                <button *ngIf="p.esSerializado" (click)="openSeriales(p)" title="Gestionar seriales"
+                        class="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                  </svg>
+                </button>
+                <button (click)="openEdit(p)" title="Editar"
+                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button (click)="toggleActivo(p)" [title]="p.activo ? 'Deshabilitar' : 'Habilitar'"
+                        class="p-1.5 rounded transition-colors"
+                        [ngClass]="p.activo ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'">
+                  <svg *ngIf="p.activo" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                  <svg *ngIf="!p.activo" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal producto con tabs -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="closeModal()"></div>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl relative z-10 flex flex-col" style="max-height: 92vh;">
+
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-800">{{ editMode ? 'Editar' : 'Nuevo' }} Producto</h3>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="flex border-b border-gray-200 bg-gray-50 px-6">
+      <button (click)="activeTab = 'general'"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [style.border-color]="activeTab === 'general' ? '#2563eb' : 'transparent'"
+              [style.color]="activeTab === 'general' ? '#2563eb' : '#6b7280'">
+        General
+      </button>
+      <button (click)="activeTab = 'imagen'"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [style.border-color]="activeTab === 'imagen' ? '#2563eb' : 'transparent'"
+              [style.color]="activeTab === 'imagen' ? '#2563eb' : '#6b7280'">
+        Imagen
+      </button>
+      <button (click)="activeTab = 'atributos'"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [style.border-color]="activeTab === 'atributos' ? '#2563eb' : 'transparent'"
+              [style.color]="activeTab === 'atributos' ? '#2563eb' : '#6b7280'">
+        Atributos
+        <span *ngIf="(editMode ? atributosProducto.length : pendingAtributos.length) > 0"
+              class="ml-1 bg-blue-100 text-blue-700 text-xs rounded-full px-1.5 py-0.5">
+          {{ editMode ? atributosProducto.length : pendingAtributos.length }}
+        </span>
+      </button>
+      <button *ngIf="form.esSerializado" (click)="activeTab = 'seriales'"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [style.border-color]="activeTab === 'seriales' ? '#2563eb' : 'transparent'"
+              [style.color]="activeTab === 'seriales' ? '#2563eb' : '#6b7280'">
+        Seriales
+        <span class="ml-1 bg-purple-100 text-purple-700 text-xs rounded-full px-1.5 py-0.5">
+          {{ editMode ? seriales.length : pendingSeriales.length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Cuerpo con tabs -->
+    <div class="flex-1 overflow-y-auto px-6 py-5" style="min-height: 300px;">
+
+      <!-- ── Tab: General ── -->
+      <div *ngIf="activeTab === 'general'" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+          <select [(ngModel)]="form.idCategoria"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option [value]="0" disabled>Seleccione categoría...</option>
+            <option *ngFor="let c of categorias" [value]="c.idCategoria">{{ c.nombreCategoria }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <input type="text" [(ngModel)]="form.nombreProducto"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="Nombre del producto">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea [(ngModel)]="form.descripcion" rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Descripción del producto"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Precio de Venta *</label>
+          <input type="number" [(ngModel)]="form.precioVenta" step="0.01" min="0.01"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex flex-wrap gap-6 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="form.esSerializado" id="serializado"
+                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+            <span class="text-sm text-gray-700">Serializado (IMEI / Número de serie)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="form.activo" id="activoProd"
+                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+            <span class="text-sm text-gray-700">Activo</span>
+          </label>
+        </div>
+        <p *ngIf="editMode && !form.esSerializado" class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          ⚠ Si desmarca "Serializado", todos los seriales existentes se marcarán como <strong>Inhabilitado</strong> al guardar.
+        </p>
+      </div>
+
+      <!-- ── Tab: Imagen ── -->
+      <div *ngIf="activeTab === 'imagen'" class="space-y-4">
+        <div *ngIf="imagePreview" class="flex items-start gap-4">
+          <div class="relative">
+            <img [src]="imagePreview" class="h-40 w-40 object-cover rounded-xl border border-gray-200 shadow" alt="Vista previa">
+            <button type="button" (click)="clearImage()"
+                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-600 shadow">
+              ✕
+            </button>
+          </div>
+          <div class="space-y-2 pt-2">
+            <p class="text-sm text-gray-600 font-medium">Imagen actual</p>
+            <button *ngIf="editMode && form.imagen && !imageFile" type="button" (click)="removeCurrentImage()"
+                    class="text-xs text-red-500 hover:text-red-700 underline">
+              Eliminar del servidor
+            </button>
+            <p *ngIf="imageFile" class="text-xs text-blue-600">Nueva imagen: {{ imageFile.name }}</p>
+          </div>
+        </div>
+        <div *ngIf="!imagePreview" class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-12 text-center">
+          <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="text-sm text-gray-400">Sin imagen asignada</p>
+        </div>
+        <label class="flex items-center gap-3 cursor-pointer border border-dashed border-gray-300 rounded-xl px-5 py-4 hover:border-blue-400 hover:bg-blue-50 transition-colors">
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm text-gray-500">{{ imageFile ? imageFile.name : 'Seleccionar imagen (JPG, PNG, WEBP · máx 5MB)' }}</span>
+          <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onFileSelect($event)">
+        </label>
+      </div>
+
+      <!-- ── Tab: Atributos ── -->
+      <div *ngIf="activeTab === 'atributos'" class="space-y-4">
+
+        <!-- Lista pendiente (modo creación) -->
+        <div *ngIf="!editMode">
+          <div *ngIf="pendingAtributos.length === 0" class="py-4 text-center text-sm text-gray-400">
+            Sin atributos agregados aún.
+          </div>
+          <table *ngIf="pendingAtributos.length > 0" class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+              <tr>
+                <th class="px-3 py-2 text-left">Atributo</th>
+                <th class="px-3 py-2 text-left">Tipo</th>
+                <th class="px-3 py-2 text-left">Valor</th>
+                <th class="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr *ngFor="let pa of pendingAtributos; let i = index" class="hover:bg-gray-50">
+                <td class="px-3 py-2 font-medium text-gray-800">{{ pa.nombreAtributo }}</td>
+                <td class="px-3 py-2 text-gray-500 text-xs">{{ pa.tipoDato }}</td>
+                <td class="px-3 py-2 text-gray-700">{{ getPendingAtributoValor(pa) }}
+                  <span *ngIf="pa.unidad" class="text-gray-400 text-xs ml-1">{{ pa.unidad }}</span>
+                </td>
+                <td class="px-3 py-2 text-right">
+                  <button (click)="removePendingAtributo(i)" class="text-red-400 hover:text-red-600 text-xs">✕ quitar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Lista guardada (modo edición) -->
+        <div *ngIf="editMode">
+          <div *ngIf="loadingAtributos" class="py-8 text-center text-sm text-gray-500">Cargando atributos...</div>
+          <div *ngIf="!loadingAtributos">
+            <div *ngIf="atributosProducto.length === 0" class="py-4 text-center text-sm text-gray-400">
+              Este producto no tiene atributos asignados.
+            </div>
+            <table *ngIf="atributosProducto.length > 0" class="w-full text-sm">
+              <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+                <tr>
+                  <th class="px-3 py-2 text-left">Atributo</th>
+                  <th class="px-3 py-2 text-left">Tipo</th>
+                  <th class="px-3 py-2 text-left">Valor</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr *ngFor="let pa of atributosProducto" class="hover:bg-gray-50">
+                  <td class="px-3 py-2 font-medium text-gray-800">{{ pa.atributo?.nombreAtributo }}</td>
+                  <td class="px-3 py-2 text-gray-500 text-xs">{{ pa.atributo?.tipoDato }}</td>
+                  <td class="px-3 py-2 text-gray-700">{{ getValorAtributo(pa) }}
+                    <span *ngIf="pa.atributo?.unidad" class="text-gray-400 text-xs ml-1">{{ pa.atributo?.unidad }}</span>
+                  </td>
+                  <td class="px-3 py-2 text-right">
+                    <button (click)="removeAtributo(pa.idAtributo)"
+                            class="text-red-400 hover:text-red-600 text-xs">✕ eliminar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Formulario agregar (visible en ambos modos) -->
+        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">
+          <p class="text-sm font-medium text-gray-700">{{ editMode ? 'Agregar atributo' : 'Agregar atributo a la lista' }}</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Atributo</label>
+              <select [ngModel]="atributoSeleccionado?.idAtributo || 0"
+                      (ngModelChange)="onAtributoSelect($event)"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option [value]="0" disabled>Seleccione...</option>
+                <option *ngFor="let a of todosAtributos" [value]="a.idAtributo">
+                  {{ a.nombreAtributo }} ({{ a.tipoDato }})
+                </option>
+              </select>
+            </div>
+            <div *ngIf="atributoSeleccionado">
+              <label class="block text-xs text-gray-500 mb-1">
+                Valor
+                <span *ngIf="atributoSeleccionado.unidad" class="text-gray-400">({{ atributoSeleccionado.unidad }})</span>
+              </label>
+              <input *ngIf="atributoSeleccionado.tipoDato === 'Texto'"
+                     type="text" [(ngModel)]="nuevoValorTexto"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="Valor texto">
+              <input *ngIf="atributoSeleccionado.tipoDato === 'Numero'"
+                     type="number" [(ngModel)]="nuevoValorNumero"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <div *ngIf="atributoSeleccionado.tipoDato === 'Booleano'" class="flex items-center gap-2 pt-2">
+                <input type="checkbox" [(ngModel)]="nuevoValorBool" id="atribBool" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                <label for="atribBool" class="text-sm text-gray-600">{{ nuevoValorBool ? 'Sí' : 'No' }}</label>
+              </div>
+              <input *ngIf="atributoSeleccionado.tipoDato === 'Fecha'"
+                     type="date" [(ngModel)]="nuevoValorFecha"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button (click)="addAtributo()" [disabled]="!atributoSeleccionado"
+                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed">
+              {{ editMode ? 'Asignar atributo' : 'Agregar a la lista' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Tab: Seriales ── -->
+      <div *ngIf="activeTab === 'seriales' && form.esSerializado">
+
+        <!-- MODO EDICIÓN: seriales guardados + formulario agregar -->
+        <ng-container *ngIf="editMode">
+          <!-- Formulario agregar -->
+          <div class="border border-gray-200 rounded-xl p-4 bg-gray-50 mb-4 space-y-3">
+            <p class="text-sm font-medium text-gray-700">Agregar serial / IMEI</p>
+            <div class="flex gap-2">
+              <input type="text" [(ngModel)]="serialForm.numeroSerieImei"
+                     placeholder="Número de serie o IMEI"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     (keyup.enter)="addSerial()">
+              <select [(ngModel)]="serialForm.estado"
+                      class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option *ngFor="let e of estadosSerial" [value]="e">{{ e }}</option>
+              </select>
+              <button (click)="addSerial()"
+                      class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap">
+                Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista seriales guardados -->
+          <div *ngIf="loadingSeriales" class="py-6 text-center text-sm text-gray-500">Cargando seriales...</div>
+          <div *ngIf="!loadingSeriales && seriales.length === 0" class="py-6 text-center text-sm text-gray-400">
+            Sin seriales registrados
+          </div>
+          <table *ngIf="!loadingSeriales && seriales.length > 0" class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-500 text-xs uppercase sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left">Serie / IMEI</th>
+                <th class="px-3 py-2 text-center">Estado actual</th>
+                <th class="px-3 py-2 text-center">Cambiar estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr *ngFor="let s of seriales" class="hover:bg-gray-50">
+                <td class="px-3 py-2 font-mono text-xs text-gray-700">{{ s.numeroSerieImei }}</td>
+                <td class="px-3 py-2 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="getEstadoSerialClass(s.estado)">
+                    {{ s.estado }}
+                  </span>
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <select [ngModel]="s.estado" (ngModelChange)="updateEstadoSerial(s, $event)"
+                          class="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option *ngFor="let e of estadosSerial" [value]="e">{{ e }}</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
+
+        <!-- MODO CREACIÓN: buffer de seriales pendientes -->
+        <ng-container *ngIf="!editMode">
+          <p class="text-sm text-gray-500 mb-3">
+            Puede pre-cargar los seriales ahora. Se guardarán con estado <strong>Disponible</strong> al crear el producto.
+          </p>
+          <div class="flex gap-2 mb-4">
+            <input type="text" [(ngModel)]="pendingSerialInput"
+                   placeholder="Número de serie o IMEI"
+                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   (keyup.enter)="addPendingSerial()">
+            <button (click)="addPendingSerial()"
+                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap">
+              Agregar
+            </button>
+          </div>
+          <div *ngIf="pendingSeriales.length === 0" class="text-center text-sm text-gray-400 py-4">
+            No se han agregado seriales todavía
+          </div>
+          <ul *ngIf="pendingSeriales.length > 0" class="space-y-1">
+            <li *ngFor="let s of pendingSeriales; let i = index"
+                class="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm font-mono">
+              <span class="text-gray-700">{{ s }}</span>
+              <button (click)="removePendingSerial(i)" class="text-red-400 hover:text-red-600 ml-2 text-xs">✕</button>
+            </li>
+          </ul>
+        </ng-container>
+      </div>
+
+    </div><!-- /body -->
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2 bg-white rounded-b-xl">
+      <button (click)="closeModal()"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+        Cancelar
+      </button>
+      <button (click)="save()"
+              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+        {{ editMode ? 'Actualizar' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal seriales -->
+<div *ngIf="showSeriales && productoSerialActual" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="showSeriales = false"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-xl relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">
+        Seriales — {{ productoSerialActual.nombreProducto }}
+      </h3>
+      <p class="text-xs text-gray-500 mt-0.5">Stock disponible: {{ productoSerialActual.stockActual }}</p>
+    </div>
+
+    <!-- Agregar serial -->
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <p class="text-sm font-medium text-gray-700 mb-3">Agregar nuevo serial / IMEI</p>
+      <div class="flex gap-2">
+        <input type="text" [(ngModel)]="serialForm.numeroSerieImei"
+               placeholder="Número de serie o IMEI"
+               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+               (keyup.enter)="addSerialExterno()">
+        <select [(ngModel)]="serialForm.estado"
+                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option *ngFor="let e of estadosSerial" [value]="e">{{ e }}</option>
+        </select>
+        <button (click)="addSerialExterno()"
+                class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap">
+          Agregar
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista seriales -->
+    <div class="max-h-72 overflow-y-auto">
+      <div *ngIf="loadingSeriales" class="py-6 text-center text-sm text-gray-500">Cargando...</div>
+      <div *ngIf="!loadingSeriales && seriales.length === 0" class="py-6 text-center text-sm text-gray-400">
+        Sin seriales registrados
+      </div>
+      <table *ngIf="!loadingSeriales && seriales.length > 0" class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 text-xs uppercase sticky top-0">
+          <tr>
+            <th class="px-4 py-2 text-left">Serie / IMEI</th>
+            <th class="px-4 py-2 text-center">Estado</th>
+            <th class="px-4 py-2 text-center">Cambiar Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let s of seriales" class="hover:bg-gray-50">
+            <td class="px-4 py-2 font-mono text-xs text-gray-700">{{ s.numeroSerieImei }}</td>
+            <td class="px-4 py-2 text-center">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="getEstadoSerialClass(s.estado)">
+                {{ s.estado }}
+              </span>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <select [ngModel]="s.estado" (ngModelChange)="updateEstadoSerial(s, $event)"
+                      class="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <option *ngFor="let e of estadosSerial" [value]="e">{{ e }}</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+      <button (click)="showSeriales = false"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

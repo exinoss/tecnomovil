@@ -1,0 +1,317 @@
+<div class="space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h2 class="text-xl font-bold text-gray-800">Reparaciones</h2>
+    <div class="flex flex-wrap gap-2">
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()"
+             placeholder="Buscar..."
+             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
+      <select [(ngModel)]="filterEstado" (ngModelChange)="applyFilter()"
+              class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+      </select>
+      <button (click)="openCreate()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
+        + Nueva Reparación
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-blue-50 text-blue-700 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Cliente</th>
+            <th class="px-4 py-3">Equipo</th>
+            <th class="px-4 py-3">IMEI</th>
+            <th class="px-4 py-3">Técnico</th>
+            <th class="px-4 py-3">Estado</th>
+            <th class="px-4 py-3">Fecha</th>
+            <th class="px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="loading">
+            <td colspan="8" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
+          </tr>
+          <tr *ngIf="!loading && filteredReparaciones.length === 0">
+            <td colspan="8" class="px-4 py-8 text-center text-gray-500">No se encontraron reparaciones</td>
+          </tr>
+          <tr *ngFor="let r of filteredReparaciones" class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-600">{{ r.idReparacion }}</td>
+            <td class="px-4 py-3 font-medium text-gray-800">{{ r.cliente?.nombres }}</td>
+            <td class="px-4 py-3 text-gray-600">{{ r.modeloEquipo }}</td>
+            <td class="px-4 py-3 text-gray-600 text-xs font-mono">{{ r.serieImeiIngreso }}</td>
+            <td class="px-4 py-3 text-gray-600">{{ r.tecnico?.nombres }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getEstadoClass(r.estado)">
+                {{ r.estado }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600 text-xs">{{ r.fechaIngreso | date:'dd/MM/yyyy' }}</td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex justify-end gap-1">
+                <button (click)="openDetalle(r)" title="Ver detalle"
+                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+                <button (click)="openEdit(r)" title="Editar"
+                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button *ngIf="r.estado === 'Cotizado'" (click)="openAprobarModal(r)" title="Aprobar/Rechazar"
+                        class="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button (click)="openEstadoModal(r)" title="Cambiar estado"
+                        class="p-1.5 text-gray-600 hover:bg-gray-50 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal crear/editar reparación -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="closeModal()"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">{{ editMode ? 'Editar' : 'Nueva' }} Reparación</h3>
+    </div>
+    <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+        <select [(ngModel)]="form.idCliente"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option [value]="0" disabled>Seleccione cliente...</option>
+          <option *ngFor="let c of clientes" [value]="c.idCliente">{{ c.nombres }} - {{ c.identificacion }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Técnico Asignado *</label>
+        <select [(ngModel)]="form.idUsuario"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option [value]="0" disabled>Seleccione técnico...</option>
+          <option *ngFor="let t of tecnicos" [value]="t.idUsuario">{{ t.nombres }}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Modelo del Equipo *</label>
+          <input type="text" [(ngModel)]="form.modeloEquipo"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="Ej: Samsung Galaxy S24">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">IMEI/Serie Ingreso *</label>
+          <input type="text" [(ngModel)]="form.serieImeiIngreso"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción de la Falla</label>
+        <textarea [(ngModel)]="form.descripcionFalla" rows="2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Describa la falla del equipo"></textarea>
+      </div>
+      <div *ngIf="editMode">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Diagnóstico Final</label>
+        <textarea [(ngModel)]="form.diagnosticoFinal" rows="2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+      <div *ngIf="editMode">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Costo Mano de Obra</label>
+        <input type="number" [(ngModel)]="form.costoManoObra" step="0.01" min="0"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+      <button (click)="closeModal()"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button (click)="save()"
+              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+        {{ editMode ? 'Actualizar' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div *ngIf="showDetalle && reparacionDetalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="closeDetalle()"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-800">Detalle Reparación #{{ reparacionDetalle.idReparacion }}</h3>
+      <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getEstadoClass(reparacionDetalle.estado)">
+        {{ reparacionDetalle.estado }}
+      </span>
+    </div>
+    <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><span class="text-gray-500">Cliente:</span> <span class="font-medium">{{ reparacionDetalle.cliente?.nombres }}</span></div>
+        <div><span class="text-gray-500">Técnico:</span> <span class="font-medium">{{ reparacionDetalle.tecnico?.nombres }}</span></div>
+        <div><span class="text-gray-500">Equipo:</span> <span class="font-medium">{{ reparacionDetalle.modeloEquipo }}</span></div>
+        <div><span class="text-gray-500">IMEI:</span> <span class="font-mono text-xs">{{ reparacionDetalle.serieImeiIngreso }}</span></div>
+        <div><span class="text-gray-500">Mano de Obra:</span> <span class="font-medium">${{ reparacionDetalle.costoManoObra | number:'1.2-2' }}</span></div>
+        <div><span class="text-gray-500">Fecha:</span> <span>{{ reparacionDetalle.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</span></div>
+      </div>
+
+      <div *ngIf="reparacionDetalle.descripcionFalla" class="text-sm">
+        <span class="text-gray-500">Falla:</span>
+        <p class="text-gray-800 mt-1">{{ reparacionDetalle.descripcionFalla }}</p>
+      </div>
+
+      <div *ngIf="reparacionDetalle.diagnosticoFinal" class="text-sm">
+        <span class="text-gray-500">Diagnóstico:</span>
+        <p class="text-gray-800 mt-1">{{ reparacionDetalle.diagnosticoFinal }}</p>
+      </div>
+
+      <!-- Repuestos -->
+      <div class="border-t border-gray-200 pt-4">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-semibold text-gray-800">Repuestos</h4>
+          <button (click)="openRepuestoModal()"
+                  class="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Agregar Repuesto</button>
+        </div>
+        <table *ngIf="repuestos.length > 0" class="w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+            <tr>
+              <th class="px-3 py-2 text-left">Producto</th>
+              <th class="px-3 py-2">Cant.</th>
+              <th class="px-3 py-2">Costo</th>
+              <th class="px-3 py-2">Precio</th>
+              <th class="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let rep of repuestos">
+              <td class="px-3 py-2">{{ rep.producto?.nombreProducto }}</td>
+              <td class="px-3 py-2 text-center">{{ rep.cantidad }}</td>
+              <td class="px-3 py-2 text-center">${{ (rep.costoUnitario || 0) | number:'1.2-2' }}</td>
+              <td class="px-3 py-2 text-center">${{ (rep.precioCobrado || 0) | number:'1.2-2' }}</td>
+              <td class="px-3 py-2 text-right">
+                <button (click)="deleteRepuesto(rep.idReparacionRepuesto)" class="text-red-500 hover:text-red-700 text-xs">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="repuestos.length === 0" class="text-sm text-gray-500 text-center py-2">Sin repuestos asignados</p>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+      <button (click)="closeDetalle()"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal agregar repuesto -->
+<div *ngIf="showRepuestoModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="showRepuestoModal = false"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">Agregar Repuesto</h3>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Producto</label>
+        <select [(ngModel)]="repuestoForm.idProducto"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option [value]="0" disabled>Seleccione...</option>
+          <option *ngFor="let p of productos" [value]="p.idProducto">{{ p.nombreProducto }} - ${{ p.precioVenta }}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+          <input type="number" [(ngModel)]="repuestoForm.cantidad" min="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Costo</label>
+          <input type="number" [(ngModel)]="repuestoForm.costoUnitario" step="0.01" min="0"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Precio Cobrado</label>
+          <input type="number" [(ngModel)]="repuestoForm.precioCobrado" step="0.01" min="0"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+      <button (click)="showRepuestoModal = false"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button (click)="addRepuesto()"
+              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cambiar estado -->
+<div *ngIf="showEstadoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="showEstadoModal = false"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">Cambiar Estado</h3>
+    </div>
+    <div class="p-6">
+      <select [(ngModel)]="nuevoEstado"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+      </select>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+      <button (click)="showEstadoModal = false"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button (click)="cambiarEstado()"
+              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal aprobar/rechazar -->
+<div *ngIf="showAprobarModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/40" (click)="showAprobarModal = false"></div>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-10">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">Aprobar / Rechazar</h3>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-gray-600">Si rechaza, indique el motivo:</p>
+      <textarea [(ngModel)]="motivoRechazo" rows="2"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Motivo de rechazo (opcional)"></textarea>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+      <button (click)="showAprobarModal = false"
+              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button (click)="aprobar(false)"
+              class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">Rechazar</button>
+      <button (click)="aprobar(true)"
+              class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">Aprobar</button>
+    </div>
+  </div>
+</div>

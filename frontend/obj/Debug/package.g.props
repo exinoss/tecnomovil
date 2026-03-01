@@ -26,7 +26,9 @@
     <PackageJsonDependenciesAngularPlatformBrowser Condition="$(PackageJsonDependenciesAngularPlatformBrowser) == ''">^20.2.0</PackageJsonDependenciesAngularPlatformBrowser>
     <PackageJsonDependenciesAngularRouter Condition="$(PackageJsonDependenciesAngularRouter) == ''">^20.2.0</PackageJsonDependenciesAngularRouter>
     <PackageJsonDependenciesTailwindcssPostcss Condition="$(PackageJsonDependenciesTailwindcssPostcss) == ''">^4.1.18</PackageJsonDependenciesTailwindcssPostcss>
+    <PackageJsonDependenciesTypesPdfmake Condition="$(PackageJsonDependenciesTypesPdfmake) == ''">^0.3.2</PackageJsonDependenciesTypesPdfmake>
     <PackageJsonDependenciesJestEditorSupport Condition="$(PackageJsonDependenciesJestEditorSupport) == ''">*</PackageJsonDependenciesJestEditorSupport>
+    <PackageJsonDependenciesPdfmake Condition="$(PackageJsonDependenciesPdfmake) == ''">^0.3.5</PackageJsonDependenciesPdfmake>
     <PackageJsonDependenciesPostcss Condition="$(PackageJsonDependenciesPostcss) == ''">^8.5.6</PackageJsonDependenciesPostcss>
     <PackageJsonDependenciesRxjs Condition="$(PackageJsonDependenciesRxjs) == ''">~7.8.0</PackageJsonDependenciesRxjs>
     <PackageJsonDependenciesTailwindcss Condition="$(PackageJsonDependenciesTailwindcss) == ''">^4.1.18</PackageJsonDependenciesTailwindcss>
