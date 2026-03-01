@@ -16,7 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 // ========== SERVICIOS ==========
 
 // EF Core - SQL Server con variables de entorno
-var connectionString = $"Server={Environment.GetEnvironmentVariable("DB_SERVER")};" +
+var dbServer = Environment.GetEnvironmentVariable("DB_SERVER");
+var dbPort   = Environment.GetEnvironmentVariable("DB_PORT");
+var dbHost   = string.IsNullOrWhiteSpace(dbPort) ? dbServer : $"{dbServer},{dbPort}";
+var connectionString = $"Server={dbHost};" +
                        $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
                        $"User Id={Environment.GetEnvironmentVariable("DB_USER")};" +
                        $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +

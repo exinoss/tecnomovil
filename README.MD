@@ -21,6 +21,7 @@ Dentro de la carpeta `backend/`, crea un archivo llamado `.env` con las siguient
 
 ```env
 DB_SERVER=localhost
+DB_PORT=1433
 DB_NAME=TecnoMovilDB
 DB_USER=
 DB_PASSWORD=
@@ -36,6 +37,7 @@ ADMIN_PASSWORD=
 ```
 
 > ⚠ `JWT_SECRET_KEY` debe tener al menos 32 caracteres.  
+> `DB_PORT` es opcional — si lo omites se usa el puerto por defecto de SQL Server (`1433`).  
 > Ajusta `DB_SERVER`, `DB_USER` y `DB_PASSWORD` según tu instancia de SQL Server.
 > Completa `ADMIN_IDENTIFICACION` y `ADMIN_PASSWORD` con los datos que quieras para el usuario administrador inicial.
 
