@@ -106,16 +106,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ========== SEED ADMIN ==========
+// ========== SEED ADMIN & MIGRATIONS ==========
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<TecnoMovilDbContext>();
     
     try
     {
-        
+        // 1. Aplicar migraciones pendientes automáticamente
+        Console.WriteLine("Aplicando migraciones a la base de datos...");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Migraciones aplicadas correctamente.");
 
-        // Seed Admin desde variables de entorno
+        // 2. Ejecutar Seed Admin desde variables de entorno
         var adminIdentificacion = Environment.GetEnvironmentVariable("ADMIN_IDENTIFICACION");
         if (!string.IsNullOrEmpty(adminIdentificacion))
         {
