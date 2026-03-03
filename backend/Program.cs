@@ -19,11 +19,25 @@ var builder = WebApplication.CreateBuilder(args);
 var dbServer = Environment.GetEnvironmentVariable("DB_SERVER");
 var dbPort   = Environment.GetEnvironmentVariable("DB_PORT");
 var dbHost   = string.IsNullOrWhiteSpace(dbPort) ? dbServer : $"{dbServer},{dbPort}";
-var connectionString = $"Server={dbHost};" +
+var dbUser = Environment.GetEnvironmentVariable("DB_USER");
+var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+string connectionString;
+
+if (string.IsNullOrWhiteSpace(dbUser))
+{
+    connectionString = $"Server={dbHost};" +
                        $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-                       $"User Id={Environment.GetEnvironmentVariable("DB_USER")};" +
-                       $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                       $"Integrated Security=True;" +
                        $"TrustServerCertificate=True;";
+}
+else
+{
+    connectionString = $"Server={dbHost};" +
+                       $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+                       $"User Id={dbUser};" +
+                       $"Password={dbPassword};" +
+                       $"TrustServerCertificate=True;";
+}
 
 builder.Services.AddDbContext<TecnoMovilDbContext>(options =>
     options.UseSqlServer(connectionString));
