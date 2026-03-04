@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using backend.Data;
 using backend.Models;
+using backend.Services;
 using DotNetEnv;
 
 // Cargar variables de entorno desde .env
@@ -70,6 +71,15 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+
+// HttpClient para llamadas a Gemini
+builder.Services.AddHttpClient("GeminiClient", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(120); // Gemini puede tardar
+});
+
+// Servicio de análisis IA
+builder.Services.AddScoped<AnalisisIAService>();
 
 // Swagger con soporte JWT
 builder.Services.AddEndpointsApiExplorer();

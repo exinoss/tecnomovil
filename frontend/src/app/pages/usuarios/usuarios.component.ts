@@ -3,6 +3,7 @@ import { UsuarioService } from '../../core/services/usuario.service';
 import { Usuario, UsuarioDto } from '../../core/models/usuario.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ValidacionService } from '../../core/services/validacion.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -31,7 +32,8 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private usuarioService: UsuarioService,
     private toast: ToastService,
-    private authService: AuthService
+    private authService: AuthService,
+    private validacion: ValidacionService
   ) {}
 
   ngOnInit(): void {
@@ -94,14 +96,18 @@ export class UsuariosComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.form.nombres.trim() || !this.form.identificacion.trim()) {
-      this.toast.show('Nombre e identificación son requeridos', 'warning');
-      return;
-    }
+    const rNombre = this.validacion.requerido(this.form.nombres, 'El nombre');
+    if (!rNombre.valid) { this.toast.show(rNombre.mensaje, 'warning'); return; }
 
-    if (!this.editMode && !this.form.password) {
-      this.toast.show('La contraseña es requerida', 'warning');
-      return;
+    const rId = this.validacion.identificacion(this.form.identificacion, this.form.tipoIdentificacion);
+    if (!rId.valid) { this.toast.show(rId.mensaje, 'warning'); return; }
+
+    const rEmail = this.validacion.email(this.form.correo);
+    if (!rEmail.valid) { this.toast.show(rEmail.mensaje, 'warning'); return; }
+
+    if (!this.editMode) {
+      const rPass = this.validacion.password(this.form.password ?? '');
+      if (!rPass.valid) { this.toast.show(rPass.mensaje, 'warning'); return; }
     }
 
     if (this.editMode && this.selectedId) {
@@ -151,10 +157,8 @@ export class UsuariosComponent implements OnInit {
   }
 
   cambiarPassword(): void {
-    if (!this.nuevaPassword || this.nuevaPassword.length < 6) {
-      this.toast.show('La contraseña debe tener al menos 6 caracteres', 'warning');
-      return;
-    }
+    const rPass = this.validacion.password(this.nuevaPassword);
+    if (!rPass.valid) { this.toast.show(rPass.mensaje, 'warning'); return; }
 
     if (this.passwordUserId) {
       this.usuarioService.cambiarPassword(this.passwordUserId, { nuevaPassword: this.nuevaPassword }).subscribe({

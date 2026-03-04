@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ClienteService } from '../../core/services/cliente.service';
 import { Cliente, ClienteDto } from '../../core/models/cliente.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { ValidacionService } from '../../core/services/validacion.service';
 
 @Component({
   selector: 'app-clientes',
@@ -21,24 +22,19 @@ export class ClientesComponent implements OnInit {
 
   tiposIdentificacion = ['Cedula', 'RUC', 'Pasaporte'];
 
-  constructor(private clienteService: ClienteService, private toast: ToastService) {}
+  constructor(
+    private clienteService: ClienteService,
+    private toast: ToastService,
+    private validacion: ValidacionService
+  ) {}
 
-  ngOnInit(): void {
-    this.loadData();
-  }
+  ngOnInit(): void { this.loadData(); }
 
   loadData(): void {
     this.loading = true;
     this.clienteService.getAll().subscribe({
-      next: (data) => {
-        this.clientes = data;
-        this.applyFilter();
-        this.loading = false;
-      },
-      error: () => {
-        this.toast.show('Error al cargar clientes', 'error');
-        this.loading = false;
-      }
+      next: (data) => { this.clientes = data; this.applyFilter(); this.loading = false; },
+      error: () => { this.toast.show('Error al cargar clientes', 'error'); this.loading = false; }
     });
   }
 
@@ -62,26 +58,24 @@ export class ClientesComponent implements OnInit {
   openEdit(c: Cliente): void {
     this.editMode = true;
     this.selectedId = c.idCliente;
-    this.form = {
-      nombres: c.nombres,
-      telefono: c.telefono,
-      email: c.email,
-      identificacion: c.identificacion,
-      tipoIdentificacion: c.tipoIdentificacion,
-      activo: c.activo
-    };
+    this.form = { nombres: c.nombres, telefono: c.telefono, email: c.email, identificacion: c.identificacion, tipoIdentificacion: c.tipoIdentificacion, activo: c.activo };
     this.showModal = true;
   }
 
-  closeModal(): void {
-    this.showModal = false;
-  }
+  closeModal(): void { this.showModal = false; }
 
   save(): void {
-    if (!this.form.nombres.trim() || !this.form.identificacion.trim()) {
-      this.toast.show('Nombre e identificación son requeridos', 'warning');
-      return;
-    }
+    const rNombre = this.validacion.requerido(this.form.nombres, 'El nombre');
+    if (!rNombre.valid) { this.toast.show(rNombre.mensaje, 'warning'); return; }
+
+    const rId = this.validacion.identificacion(this.form.identificacion, this.form.tipoIdentificacion);
+    if (!rId.valid) { this.toast.show(rId.mensaje, 'warning'); return; }
+
+    const rTel = this.validacion.telefono(this.form.telefono);
+    if (!rTel.valid) { this.toast.show(rTel.mensaje, 'warning'); return; }
+
+    const rEmail = this.validacion.email(this.form.email);
+    if (!rEmail.valid) { this.toast.show(rEmail.mensaje, 'warning'); return; }
 
     if (this.editMode && this.selectedId) {
       this.clienteService.update(this.selectedId, this.form).subscribe({

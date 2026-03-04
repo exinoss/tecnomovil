@@ -8,7 +8,7 @@ const routes: Routes = [
     path: '',
     component: LayoutComponent,
     children: [
-      { path: '', redirectTo: 'productos', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'categorias',
         loadChildren: () => import('../pages/categorias/categorias.module').then(m => m.CategoriasModule),
@@ -62,6 +62,18 @@ const routes: Routes = [
         loadChildren: () => import('../pages/configuracion/configuracion.module').then(m => m.ConfiguracionModule),
         canActivate: [RoleGuard],
         data: { roles: ['Admin'] }
+      },
+      {
+        path: 'dashboard',
+        loadChildren: () => import('../pages/dashboard/dashboard-module').then(m => m.DashboardModule),
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'Vendedor'] }
+      },
+      {
+        path: 'analisis-ia',
+        loadChildren: () => import('../pages/analisis-ia/analisis-ia-module').then(m => m.AnalisisIaModule),
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'Vendedor'] }
       }
     ]
   }

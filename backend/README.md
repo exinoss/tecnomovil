@@ -422,3 +422,15 @@ tipoDato: texto, numero, bool, fecha
 ```
 
 Tipos: Compra, Venta, ConsumoReparacion, Ajuste, Devolucion
+
+---
+
+## Analisis IA
+
+### POST /analisis/generar
+
+### GET /analisis/ultimo
+
+### GET /analisis/historial
+
+### GET /analisis/{id}

@@ -6,6 +6,7 @@ import { Producto, ProductoDto, ProductoSerial, ProductoSerialDto, ProductoAtrib
 import { Categoria } from '../../core/models/categoria.model';
 import { Atributo } from '../../core/models/configuracion.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { ValidacionService } from '../../core/services/validacion.service';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -63,7 +64,8 @@ export class ProductosComponent implements OnInit {
     private productoService: ProductoService,
     private categoriaService: CategoriaService,
     private atributoService: AtributoService,
-    private toast: ToastService
+    private toast: ToastService,
+    private validacion: ValidacionService
   ) {}
 
   ngOnInit(): void {
@@ -187,10 +189,13 @@ export class ProductosComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.form.nombreProducto.trim() || !this.form.idCategoria || this.form.precioVenta <= 0) {
-      this.toast.show('Complete los campos requeridos', 'warning');
-      return;
-    }
+    const rNombre = this.validacion.requerido(this.form.nombreProducto, 'El nombre del producto');
+    if (!rNombre.valid) { this.toast.show(rNombre.mensaje, 'warning'); return; }
+
+    if (!this.form.idCategoria) { this.toast.show('Seleccione una categoría.', 'warning'); return; }
+
+    const rPrecio = this.validacion.precio(this.form.precioVenta);
+    if (!rPrecio.valid) { this.toast.show(rPrecio.mensaje, 'warning'); return; }
 
     if (this.editMode && this.selectedId) {
       this.productoService.update(this.selectedId, this.form).subscribe({
@@ -286,12 +291,16 @@ export class ProductosComponent implements OnInit {
   }
 
   addSerial(): void {
-    if (!this.serialForm.numeroSerieImei.trim()) {
-      this.toast.show('Ingrese el número de serie/IMEI', 'error');
-      return;
-    }
+    const val = this.serialForm.numeroSerieImei.trim();
+    // Si el producto es serializado con IMEI usamos validación estricta de 15 dígitos,
+    // si es serie alfanumérica usamos validación de serial genérico.
+    const r = /^\d{15}$/.test(val)
+      ? this.validacion.imei(val)
+      : this.validacion.serial(val);
+    if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
+
     const idProducto = this.editMode ? this.selectedId! : null;
-    if (!idProducto) return; // No debería pasar — en creación se usa addPendingSerial
+    if (!idProducto) return;
     this.productoService.createSerial(idProducto, this.serialForm).subscribe({
       next: () => {
         this.toast.show('Serial agregado', 'success');
@@ -306,8 +315,14 @@ export class ProductosComponent implements OnInit {
   // Seriales pendientes para modo creación
   addPendingSerial(): void {
     const val = this.pendingSerialInput.trim();
-    if (!val) { this.toast.show('Ingrese el número de serie/IMEI', 'error'); return; }
-    if (this.pendingSeriales.includes(val)) { this.toast.show('Serial duplicado en la lista', 'warning'); return; }
+    if (!val) { this.toast.show('Ingrese el número de serie/IMEI.', 'warning'); return; }
+
+    const r = /^\d{15}$/.test(val)
+      ? this.validacion.imei(val)
+      : this.validacion.serial(val);
+    if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
+
+    if (this.pendingSeriales.includes(val)) { this.toast.show('Serial duplicado en la lista.', 'warning'); return; }
     this.pendingSeriales.push(val);
     this.pendingSerialInput = '';
   }
@@ -457,10 +472,11 @@ export class ProductosComponent implements OnInit {
   }
 
   addSerialExterno(): void {
-    if (!this.serialForm.numeroSerieImei.trim()) {
-      this.toast.show('Ingrese el número de serie/IMEI', 'error');
-      return;
-    }
+    const val = this.serialForm.numeroSerieImei.trim();
+    const r = /^\d{15}$/.test(val)
+      ? this.validacion.imei(val)
+      : this.validacion.serial(val);
+    if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
     this.productoService.createSerial(this.productoSerialActual!.idProducto, this.serialForm).subscribe({
       next: () => {
         this.toast.show('Serial agregado', 'success');

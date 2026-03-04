@@ -24,6 +24,8 @@ public class TecnoMovilDbContext : DbContext
     public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
     public DbSet<Atributo> Atributos { get; set; }
     public DbSet<ProductoAtributo> ProductoAtributos { get; set; }
+    public DbSet<AnalisisIA> AnalisisIA { get; set; }
+    public DbSet<DetalleAnalisisIA> DetalleAnalisisIA { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -211,6 +213,20 @@ public class TecnoMovilDbContext : DbContext
             .HasOne(rr => rr.Serial)
             .WithMany()
             .HasForeignKey(rr => rr.IdSerial)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // AnalisisIA -> DetalleAnalisisIA (Cascade)
+        modelBuilder.Entity<DetalleAnalisisIA>()
+            .HasOne(d => d.AnalisisIA)
+            .WithMany(a => a.Detalles)
+            .HasForeignKey(d => d.IdAnalisis)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // DetalleAnalisisIA -> Producto (Restrict, el producto no debe borrarse si tiene análisis)
+        modelBuilder.Entity<DetalleAnalisisIA>()
+            .HasOne(d => d.Producto)
+            .WithMany()
+            .HasForeignKey(d => d.IdProducto)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

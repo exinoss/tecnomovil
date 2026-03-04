@@ -1,0 +1,188 @@
+<div class="space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h2 class="text-xl font-bold text-gray-800">Dashboard</h2>
+  </div>
+
+  <!-- FILTROS -->
+  <div *ngIf="!loading && analisis" class="bg-white rounded-lg shadow p-4">
+    <div class="flex flex-wrap items-end gap-4">
+      <!-- Filtro de análisis (fecha) -->
+      <div class="flex-1 min-w-[180px]">
+        <label class="block text-xs text-gray-500 mb-1">Análisis (fecha)</label>
+        <select
+          [(ngModel)]="filtroAnalisisId"
+          (ngModelChange)="onCambioAnalisis()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option *ngFor="let h of historial" [ngValue]="h.idAnalisis">
+            {{ h.fechaGeneracion | date: 'dd/MM/yyyy HH:mm' }} —
+            {{ h.totalProductosAnalizados }} prod.
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtro de producto -->
+      <div class="flex-1 min-w-[180px]">
+        <label class="block text-xs text-gray-500 mb-1">Producto</label>
+        <input
+          type="text"
+          [(ngModel)]="filtroProducto"
+          (ngModelChange)="recalcular()"
+          placeholder="Buscar producto..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Filtro de urgencia -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Urgencia</label>
+        <div class="flex gap-1">
+          <button
+            (click)="filtroUrgencia = 'Todos'; recalcular()"
+            class="px-3 py-2 rounded-lg text-xs font-medium border transition-colors"
+            [ngClass]="
+              filtroUrgencia === 'Todos'
+                ? 'bg-gray-800 text-white border-gray-800'
+                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+            "
+          >
+            Todos
+          </button>
+          <button
+            (click)="filtroUrgencia = 'Alta'; recalcular()"
+            class="px-3 py-2 rounded-lg text-xs font-medium border transition-colors"
+            [ngClass]="
+              filtroUrgencia === 'Alta'
+                ? 'bg-red-600 text-white border-red-600'
+                : 'bg-white text-red-600 border-red-300 hover:bg-red-50'
+            "
+          >
+            Alta
+          </button>
+          <button
+            (click)="filtroUrgencia = 'Media'; recalcular()"
+            class="px-3 py-2 rounded-lg text-xs font-medium border transition-colors"
+            [ngClass]="
+              filtroUrgencia === 'Media'
+                ? 'bg-yellow-500 text-white border-yellow-500'
+                : 'bg-white text-yellow-600 border-yellow-300 hover:bg-yellow-50'
+            "
+          >
+            Media
+          </button>
+          <button
+            (click)="filtroUrgencia = 'Baja'; recalcular()"
+            class="px-3 py-2 rounded-lg text-xs font-medium border transition-colors"
+            [ngClass]="
+              filtroUrgencia === 'Baja'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-green-600 border-green-300 hover:bg-green-50'
+            "
+          >
+            Baja
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-8 text-gray-500 text-sm">Cargando dashboard...</div>
+
+  <div
+    *ngIf="!loading && !analisis"
+    class="bg-white rounded-lg shadow p-6 text-center text-sm text-gray-500"
+  >
+    No hay análisis disponible. Genera uno en "Análisis IA".
+  </div>
+
+  <div *ngIf="!loading && analisis" class="space-y-4">
+    <!-- KPIs -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-xs text-gray-500 mb-1">Productos filtrados</p>
+        <p class="text-2xl font-bold text-gray-800">{{ totalProductos }}</p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-400">
+        <p class="text-xs text-gray-500 mb-1">Urgencia alta</p>
+        <p class="text-2xl font-bold text-red-600">{{ totalUrgenciaAlta }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Compra urgente</p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-400">
+        <p class="text-xs text-gray-500 mb-1">Urgencia media</p>
+        <p class="text-2xl font-bold text-yellow-600">{{ totalUrgenciaMedia }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Oportunidad</p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-400">
+        <p class="text-xs text-gray-500 mb-1">Urgencia baja</p>
+        <p class="text-2xl font-bold text-green-600">{{ totalUrgenciaBaja }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Stock estable</p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-400">
+        <p class="text-xs text-gray-500 mb-1">Unidades a comprar</p>
+        <p class="text-2xl font-bold text-blue-600">{{ totalUnidadesSugeridas }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Total sugerido</p>
+      </div>
+    </div>
+
+    <!-- Gráfico 1: Tendencia -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-sm font-medium text-gray-800 mb-1">Tendencia de ventas y proyección IA</h3>
+      <p class="text-xs text-gray-400 mb-4">Top 5 productos · línea punteada = proyección</p>
+      <div *ngIf="lineChartData" class="h-[350px]">
+        <canvas
+          baseChart
+          [data]="lineChartData"
+          [options]="lineChartOptions"
+          [type]="'line'"
+        ></canvas>
+      </div>
+      <p *ngIf="!lineChartData" class="text-center text-sm text-gray-400 py-10">
+        Sin datos para los filtros seleccionados.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Gráfico 2: Barras horizontales -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-sm font-medium text-gray-800 mb-1">Sugerencia de compra por producto</h3>
+        <p class="text-xs text-gray-400 mb-4">Top 10 · rojo=alta, amarillo=media, verde=baja</p>
+        <div *ngIf="barChartData" class="h-[350px]">
+          <canvas
+            baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            [type]="'bar'"
+          ></canvas>
+        </div>
+        <p *ngIf="!barChartData" class="text-center text-sm text-gray-400 py-10">Sin datos.</p>
+      </div>
+
+      <!-- Gráfico 3: Doughnut -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-sm font-medium text-gray-800 mb-1">Distribución por nivel de urgencia</h3>
+        <p class="text-xs text-gray-400 mb-4">Todos los productos del análisis</p>
+        <div *ngIf="doughnutChartData" class="h-[350px]">
+          <canvas
+            baseChart
+            [data]="doughnutChartData"
+            [options]="doughnutChartOptions"
+            [type]="'doughnut'"
+          ></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico 4: Barras + Línea -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-sm font-medium text-gray-800 mb-1">Stock actual vs Proyección de ventas</h3>
+      <p class="text-xs text-gray-400 mb-4">
+        Barras azules = stock disponible · línea roja = ventas proyectadas · si la línea supera la
+        barra, el producto se agotará
+      </p>
+      <div *ngIf="mixedChartData" class="h-[380px]">
+        <canvas baseChart [data]="mixedChartData" [options]="mixedChartOptions" type="bar"></canvas>
+      </div>
+      <p *ngIf="!mixedChartData" class="text-center text-sm text-gray-400 py-10">Sin datos.</p>
+    </div>
+  </div>
+</div>
