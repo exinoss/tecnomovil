@@ -15,7 +15,7 @@ import { Reparacion } from '../../core/models/reparacion.model';
 interface ItemFactura {
   tipoItem: string;
   idProducto?: number;
-  idSerial?: number;
+
   idReparacion?: number;
   descripcionItem: string;
   cantidad: number;
@@ -33,6 +33,14 @@ export class FacturasComponent implements OnInit {
   filteredFacturas: Factura[] = [];
   searchTerm = '';
   loading = true;
+
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedFacturas(): Factura[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredFacturas.slice(start, start + this.pageSize);
+  }
 
   // Vista crear factura
   showNuevaFactura = false;
@@ -94,6 +102,7 @@ export class FacturasComponent implements OnInit {
       (f.cliente?.nombres?.toLowerCase() || '').includes(term) ||
       (f.vendedor?.nombres?.toLowerCase() || '').includes(term)
     );
+    this.currentPage = 1;
   }
 
   openNuevaFactura(): void {
@@ -107,7 +116,7 @@ export class FacturasComponent implements OnInit {
     this.clienteService.getAll().subscribe(data => this.clientes = data.filter(c => c.activo));
     this.productoService.getAll().subscribe(data => this.productos = data.filter(p => p.activo && p.stockActual > 0));
     this.reparacionService.getAll().subscribe(data =>
-      this.reparacionesDisponibles = data.filter(r => r.estado === 'Reparado' || r.estado === 'Entregado')
+      this.reparacionesDisponibles = data.filter(r => r.estado === 'Reparado')
     );
     this.configuracionService.get().subscribe({
       next: (config) => this.ivaPorcentaje = config.ivaPorcentaje,
@@ -202,7 +211,7 @@ export class FacturasComponent implements OnInit {
       idCliente: this.selectedCliente,
       detalles: this.items.map(i => ({
         idProducto: i.idProducto || undefined,
-        idSerial: i.idSerial || undefined,
+
         idReparacion: i.idReparacion || undefined,
         descripcionItem: i.descripcionItem,
         cantidad: i.cantidad,

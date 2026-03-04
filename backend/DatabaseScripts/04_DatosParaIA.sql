@@ -136,10 +136,11 @@ BEGIN TRY
         WHERE es_serializado = 0 AND activo = 1
     )
     INSERT INTO dbo.Movimiento_Inventario
-        (fecha, id_producto, tipo, cantidad, referencia_tabla, referencia_id, detalle)
+        (fecha, id_producto, id_serial, tipo, cantidad, referencia_tabla, referencia_id, detalle)
     SELECT
         DATEADD(DAY, -15, CAST(@Inicio AS DATETIME2(7))),  -- un poco antes del periodo
         p.id_producto,
+        NULL,
         'Compra',
         CASE
             WHEN p.nombre_producto LIKE N'%Mica%' OR p.nombre_producto LIKE N'%Funda%' THEN 300
@@ -281,9 +282,9 @@ BEGIN TRY
 
             /* Insert detalle: Venta Directa => trigger genera Movimiento_Inventario (Venta, cantidad negativa) */
             INSERT INTO dbo.Detalle_Factura
-                (id_factura, id_producto, id_reparacion, descripcion_item, cantidad, precio_unitario, tipo_item)
+                (id_factura, id_producto, id_serial, id_reparacion, descripcion_item, cantidad, precio_unitario, tipo_item)
             VALUES
-                (@IdFactura, @IdProducto, NULL, NULL, @Cant, @Precio, 'Venta Directa');
+                (@IdFactura, @IdProducto, NULL, NULL, NULL, @Cant, @Precio, 'Venta Directa');
 
             /* Descontar de nuestro control para evitar negativos en la simulación */
             UPDATE #Stock

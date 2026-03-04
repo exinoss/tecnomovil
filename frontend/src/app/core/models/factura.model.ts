@@ -28,7 +28,7 @@ export interface DetalleFactura {
   idDetalle: number;
   idFactura: number;
   idProducto?: number;
-  idSerial?: number;
+
   idReparacion?: number;
   descripcionItem?: string;
   cantidad: number;
@@ -46,7 +46,7 @@ export interface FacturaDto {
 export interface DetalleFacturaDto {
   idDetalle?: number;
   idProducto?: number;
-  idSerial?: number;
+
   idReparacion?: number;
   descripcionItem?: string;
   cantidad: number;

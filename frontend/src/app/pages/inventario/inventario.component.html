@@ -2,21 +2,37 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <h2 class="text-xl font-bold text-gray-800">Inventario</h2>
     <div class="flex flex-wrap gap-2">
-      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()"
-             placeholder="Buscar producto..."
-             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
-      <select [(ngModel)]="filterTipo" (ngModelChange)="applyFilter()"
-              class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilter()"
+        placeholder="Buscar producto..."
+        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48"
+      />
+      <select
+        [(ngModel)]="filterTipo"
+        (ngModelChange)="applyFilter()"
+        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
         <option value="">Todos los tipos</option>
         <option *ngFor="let t of tiposMovimiento" [value]="t">{{ t }}</option>
       </select>
-      <button (click)="toggleStockBajo()"
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-              [class]="showStockBajo ? 'bg-red-600 text-white hover:bg-red-700' : 'border border-red-300 text-red-600 hover:bg-red-50'">
+      <button
+        (click)="toggleStockBajo()"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+        [class]="
+          showStockBajo
+            ? 'bg-red-600 text-white hover:bg-red-700'
+            : 'border border-red-300 text-red-600 hover:bg-red-50'
+        "
+      >
         Stock Bajo
       </button>
-      <button *ngIf="isAdmin" (click)="openCreate()"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
+      <button
+        *ngIf="isAdmin"
+        (click)="openCreate()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
+      >
         + Nuevo Movimiento
       </button>
     </div>
@@ -25,10 +41,14 @@
   <!-- Stock bajo -->
   <div *ngIf="showStockBajo" class="bg-red-50 border border-red-200 rounded-lg p-4">
     <h3 class="font-semibold text-red-800 mb-3">Productos con Stock Bajo</h3>
-    <div *ngIf="productosStockBajo.length === 0" class="text-sm text-red-600">No hay productos con stock bajo</div>
+    <div *ngIf="productosStockBajo.length === 0" class="text-sm text-red-600">
+      No hay productos con stock bajo
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-      <div *ngFor="let p of productosStockBajo"
-           class="bg-white border border-red-100 rounded-lg p-3 flex items-center justify-between">
+      <div
+        *ngFor="let p of productosStockBajo"
+        class="bg-white border border-red-100 rounded-lg p-3 flex items-center justify-between"
+      >
         <div>
           <p class="font-medium text-gray-800 text-sm">{{ p.nombreProducto }}</p>
           <p class="text-xs text-gray-500">{{ p.categoria?.nombreCategoria }}</p>
@@ -47,37 +67,52 @@
             <th class="px-4 py-3">Producto</th>
             <th class="px-4 py-3">Tipo</th>
             <th class="px-4 py-3 text-center">Cantidad</th>
-            <th class="px-4 py-3">Serie/IMEI</th>
+
             <th class="px-4 py-3">Detalle</th>
             <th class="px-4 py-3">Fecha</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr *ngIf="loading">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
           </tr>
           <tr *ngIf="!loading && filteredMovimientos.length === 0">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-500">No se encontraron movimientos</td>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+              No se encontraron movimientos
+            </td>
           </tr>
-          <tr *ngFor="let m of filteredMovimientos" class="hover:bg-gray-50">
+          <tr *ngFor="let m of pagedMovimientos" class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-600">{{ m.idMovimiento }}</td>
             <td class="px-4 py-3 font-medium text-gray-800">{{ m.producto?.nombreProducto }}</td>
             <td class="px-4 py-3">
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="getTipoClass(m.tipo)">
+              <span
+                class="px-2 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="getTipoClass(m.tipo)"
+              >
                 {{ m.tipo }}
               </span>
             </td>
-            <td class="px-4 py-3 text-center font-medium"
-                [class]="m.tipo === 'Compra' || m.tipo === 'Devolucion' ? 'text-green-600' : 'text-red-600'">
-              {{ m.tipo === 'Compra' || m.tipo === 'Devolucion' ? '+' : '-' }}{{ m.cantidad }}
+            <td class="px-4 py-3 text-center font-medium" [class]="getColorClass(m)">
+              {{ getDisplayCantidad(m) }}
             </td>
-            <td class="px-4 py-3 text-gray-600 text-xs font-mono">{{ m.serial?.numeroSerieImei || '-' }}</td>
-            <td class="px-4 py-3 text-gray-600 text-xs truncate max-w-[200px]">{{ m.detalle || '-' }}</td>
-            <td class="px-4 py-3 text-gray-600 text-xs">{{ m.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+
+            <td class="px-4 py-3 text-gray-600 text-xs truncate max-w-[200px]">
+              {{ m.detalle || '-' }}
+            </td>
+            <td class="px-4 py-3 text-gray-600 text-xs">
+              {{ m.fecha | date: 'dd/MM/yyyy HH:mm' }}
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [totalItems]="filteredMovimientos.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    >
+    </app-pagination>
   </div>
 </div>
 
@@ -91,38 +126,151 @@
     <div class="p-6 space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
-        <select [(ngModel)]="form.idProducto"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select
+          [(ngModel)]="form.idProducto"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
           <option [value]="0" disabled>Seleccione...</option>
-          <option *ngFor="let p of productos" [value]="p.idProducto">{{ p.nombreProducto }} (Stock: {{ p.stockActual }})</option>
+          <option *ngFor="let p of productos" [value]="p.idProducto">
+            {{ p.nombreProducto }} (Stock: {{ p.stockActual }})
+          </option>
         </select>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
-          <select [(ngModel)]="form.tipo"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select
+            [(ngModel)]="form.tipo"
+            (ngModelChange)="onTipoChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
             <option *ngFor="let t of tiposMovimiento" [value]="t">{{ t }}</option>
           </select>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
-          <input type="number" [(ngModel)]="form.cantidad" min="1"
-                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- Botones Añadir/Quitar dinamicos si es Ajuste o Devolucion -->
+        <div
+          class="col-span-2 mb-2 grid grid-cols-2 gap-2"
+          *ngIf="form.tipo === 'Ajuste' || form.tipo === 'Devolucion'"
+        >
+          <button
+            (click)="operacionAuxiliar = 'suma'; mensajeErrorStock = ''"
+            [class.ring-2]="operacionAuxiliar === 'suma'"
+            [class.ring-green-500]="operacionAuxiliar === 'suma'"
+            [class.bg-green-50]="operacionAuxiliar === 'suma'"
+            [class.border-green-300]="operacionAuxiliar === 'suma'"
+            class="py-1.5 px-3 rounded-lg border border-gray-300 text-sm font-medium flex items-center justify-center gap-1 text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            <svg
+              class="w-4 h-4 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+            {{ form.tipo === 'Devolucion' ? 'Ingreso de Cliente' : 'Añadir' }}
+          </button>
+
+          <button
+            (click)="operacionAuxiliar = 'resta'; mensajeErrorStock = ''"
+            [class.ring-2]="operacionAuxiliar === 'resta'"
+            [class.ring-red-500]="operacionAuxiliar === 'resta'"
+            [class.bg-red-50]="operacionAuxiliar === 'resta'"
+            [class.border-red-300]="operacionAuxiliar === 'resta'"
+            class="py-1.5 px-3 rounded-lg border border-gray-300 text-sm font-medium flex items-center justify-center gap-1 text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 12H4"
+              ></path>
+            </svg>
+            {{ form.tipo === 'Devolucion' ? 'Entrega a Proveedor' : 'Quitar' }}
+          </button>
         </div>
+
+        <div class="col-span-2 flex flex-col">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
+          <div class="relative flex">
+            <!-- Signo estatico para Venta o Compra, dinámico para Ajuste/Devolucion -->
+            <span
+              class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 text-sm font-bold w-10 justify-center transition-colors"
+              [ngClass]="
+                form.tipo === 'Venta' || (form.tipo !== 'Compra' && operacionAuxiliar === 'resta')
+                  ? 'text-red-600 bg-red-50 border-red-200'
+                  : 'text-green-600 bg-green-50 border-green-200'
+              "
+            >
+              {{
+                form.tipo === 'Venta' || (form.tipo !== 'Compra' && operacionAuxiliar === 'resta')
+                  ? '-'
+                  : '+'
+              }}
+            </span>
+            <input
+              type="number"
+              [(ngModel)]="form.cantidad"
+              (ngModelChange)="mensajeErrorStock = ''"
+              min="1"
+              onkeypress="return event.charCode >= 48 && event.charCode <= 57;"
+              class="flex-1 min-w-0 w-full px-3 py-2 border border-gray-300 rounded-none rounded-r-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-200">
+        <svg
+          class="w-4 h-4 inline mr-1 text-blue-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        {{ textoAyudaMovimiento }}
+      </div>
+
+      <div
+        *ngIf="mensajeErrorStock"
+        class="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200 font-medium"
+      >
+        {{ mensajeErrorStock }}
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Detalle</label>
-        <textarea [(ngModel)]="form.detalle" rows="2"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Descripción del movimiento"></textarea>
+        <textarea
+          [(ngModel)]="form.detalle"
+          rows="2"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Descripción del movimiento"
+        ></textarea>
       </div>
     </div>
     <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
-      <button (click)="showModal = false"
-              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
-      <button (click)="save()"
-              class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Guardar</button>
+      <button
+        (click)="showModal = false"
+        class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="save()"
+        class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+      >
+        Guardar
+      </button>
     </div>
   </div>
 </div>

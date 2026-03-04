@@ -103,6 +103,10 @@ public class ReparacionesController : ControllerBase
         if (reparacion == null)
             return NotFound(new { message = "Reparación no encontrada" });
 
+        // No permitir modificar si está en estado final
+        if (reparacion.Estado == "Reparado" || reparacion.Estado == "Cancelado" || reparacion.Estado == "Facturado")
+            return BadRequest(new { message = $"No se puede modificar una reparación con estado '{reparacion.Estado}'" });
+
         reparacion.IdCliente = dto.IdCliente;
         reparacion.IdUsuario = dto.IdUsuario;
         reparacion.ModeloEquipo = dto.ModeloEquipo;
@@ -122,6 +126,10 @@ public class ReparacionesController : ControllerBase
         var reparacion = await _context.Reparaciones.FindAsync(id);
         if (reparacion == null)
             return NotFound(new { message = "Reparación no encontrada" });
+
+        // No permitir cambiar estado si ya está en estado final
+        if (reparacion.Estado == "Reparado" || reparacion.Estado == "Cancelado" || reparacion.Estado == "Facturado")
+            return BadRequest(new { message = $"No se puede cambiar el estado de una reparación '{reparacion.Estado}'" });
 
         reparacion.Estado = dto.Estado;
         await _context.SaveChangesAsync();
@@ -159,7 +167,7 @@ public class ReparacionesController : ControllerBase
     {
         return await _context.ReparacionRepuestos
             .Include(r => r.Producto)
-            .Include(r => r.Serial)
+
             .Where(r => r.IdReparacion == id)
             .ToListAsync();
     }
@@ -175,7 +183,7 @@ public class ReparacionesController : ControllerBase
         {
             IdReparacion = id,
             IdProducto = dto.IdProducto,
-            IdSerial = dto.IdSerial,
+
             Cantidad = dto.Cantidad,
             CostoUnitario = dto.CostoUnitario,
             PrecioCobrado = dto.PrecioCobrado

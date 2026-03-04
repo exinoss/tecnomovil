@@ -16,8 +16,6 @@ public class MovimientoInventario
     [Column("id_producto")]
     public int IdProducto { get; set; }
 
-    [Column("id_serial")]
-    public int? IdSerial { get; set; }
 
     [Required]
     [MaxLength(30)]
@@ -42,6 +40,4 @@ public class MovimientoInventario
     [ForeignKey("IdProducto")]
     public virtual Producto? Producto { get; set; }
 
-    [ForeignKey("IdSerial")]
-    public virtual ProductoSerial? Serial { get; set; }
 }

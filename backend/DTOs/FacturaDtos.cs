@@ -19,7 +19,7 @@ public class DetalleFacturaDto
 {
     public int? IdDetalle { get; set; }
     public int? IdProducto { get; set; }
-    public int? IdSerial { get; set; }
+
     public int? IdReparacion { get; set; }
     public string? DescripcionItem { get; set; }
 

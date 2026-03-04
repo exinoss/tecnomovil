@@ -14,7 +14,7 @@ public class AnalisisIAService
     private readonly string _geminiApiUrl;
 
     private const int MESES_ANALISIS = 6;
-    private const int MAX_PRODUCTOS_LOTE = 25;
+    private const int MAX_PRODUCTOS_LOTE = 10;
 
     public AnalisisIAService(TecnoMovilDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
@@ -39,6 +39,7 @@ public class AnalisisIAService
                 df.Factura!.Fecha <= fechaFin &&
                 df.Producto != null && df.Producto.Activo)
             .GroupBy(df => df.IdProducto)
+            .OrderByDescending(g => g.Sum(df => df.Cantidad)) // los más vendidos primero
             .Select(g => g.Key!.Value)
             .Take(MAX_PRODUCTOS_LOTE)
             .ToListAsync();
@@ -152,7 +153,7 @@ Estructura de cada objeto:
         var requestBody = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
-            generationConfig = new { temperature = 0.2, maxOutputTokens = 8192 }
+            generationConfig = new { temperature = 0.2, maxOutputTokens = 16384 }
         };
 
         var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
@@ -173,8 +174,9 @@ Estructura de cada objeto:
             .GetString() ?? "[]";
 
         int tokensUsados = 0;
-        if (root.TryGetProperty("usageMetadata", out var usage))
-            usage.TryGetProperty("totalTokenCount", out var t);
+        if (root.TryGetProperty("usageMetadata", out var usage) &&
+            usage.TryGetProperty("totalTokenCount", out var t))
+            tokensUsados = t.GetInt32();
 
         // Limpiar backticks si Gemini los incluye
         textoGenerado = textoGenerado.Trim().Replace("```json", "").Replace("```", "").Trim();

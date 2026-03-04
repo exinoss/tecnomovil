@@ -57,7 +57,7 @@ public class FacturasController : ControllerBase
             {
                 IdDetalle = d.IdDetalle,
                 IdProducto = d.IdProducto,
-                IdSerial = d.IdSerial,
+
                 IdReparacion = d.IdReparacion,
                 DescripcionItem = d.DescripcionItem,
                 Cantidad = d.Cantidad,
@@ -114,7 +114,7 @@ public class FacturasController : ControllerBase
             {
                 IdFactura = factura.IdFactura,
                 IdProducto = detalleDto.IdProducto,
-                IdSerial = detalleDto.IdSerial,
+
                 IdReparacion = detalleDto.IdReparacion,
                 DescripcionItem = detalleDto.DescripcionItem,
                 Cantidad = detalleDto.Cantidad,
@@ -124,8 +124,8 @@ public class FacturasController : ControllerBase
             _context.DetalleFacturas.Add(detalle);
         }
 
-        // Vincular reparaciones si hay
-        if (dto.ReparacionIds != null)
+        // Vincular reparaciones si hay y cambiar estado a "Facturado"
+        if (dto.ReparacionIds != null && dto.ReparacionIds.Any())
         {
             foreach (var idReparacion in dto.ReparacionIds)
             {
@@ -134,6 +134,22 @@ public class FacturasController : ControllerBase
                     IdFactura = factura.IdFactura,
                     IdReparacion = idReparacion
                 });
+
+                // Cambiar estado de la reparación a "Facturado" y sincronizar costo
+                var reparacion = await _context.Reparaciones.FindAsync(idReparacion);
+                if (reparacion != null)
+                {
+                    reparacion.Estado = "Facturado";
+
+                    // Buscar el detalle de factura correspondiente a esta reparación
+                    var detalleReparacion = dto.Detalles
+                        .FirstOrDefault(d => d.IdReparacion == idReparacion && d.TipoItem == "Reparacion");
+                    if (detalleReparacion != null)
+                    {
+                        // Actualizar el costo de mano de obra con el valor facturado
+                        reparacion.CostoManoObra = detalleReparacion.PrecioUnitario;
+                    }
+                }
             }
         }
 
@@ -156,7 +172,7 @@ public class FacturasController : ControllerBase
         {
             IdFactura = id,
             IdProducto = dto.IdProducto,
-            IdSerial = dto.IdSerial,
+
             IdReparacion = dto.IdReparacion,
             DescripcionItem = dto.DescripcionItem,
             Cantidad = dto.Cantidad,

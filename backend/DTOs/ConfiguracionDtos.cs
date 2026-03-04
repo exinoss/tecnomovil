@@ -47,7 +47,7 @@ public class MovimientoInventarioDto
     [Required]
     public int IdProducto { get; set; }
 
-    public int? IdSerial { get; set; }
+
 
     [Required]
     public string Tipo { get; set; } = string.Empty;

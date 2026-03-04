@@ -1,14 +1,16 @@
-<div class="min-h-screen bg-gray-50 flex flex-col">
-  <!-- Header -->
-  <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+<div class="h-screen bg-gray-50 flex flex-col overflow-hidden">
+  <!-- Header sticky -->
+  <app-header (toggleSidebar)="toggleSidebar()" class="flex-shrink-0"></app-header>
 
   <div class="flex flex-1 overflow-hidden">
     <!-- Sidebar -->
     <app-sidebar [isOpen]="sidebarOpen" (closeSidebar)="sidebarOpen = false"></app-sidebar>
 
-    <!-- Contenido principal -->
-    <main class="flex-1 overflow-auto p-6 transition-all duration-300"
-          [style.margin-left]="sidebarOpen ? '256px' : '0'">
+    <!-- Contenido principal — solo el main hace scroll -->
+    <main
+      class="flex-1 overflow-y-auto p-6 transition-all duration-300"
+      [style.margin-left]="sidebarOpen ? '256px' : '0'"
+    >
       <router-outlet></router-outlet>
     </main>
   </div>

@@ -15,6 +15,14 @@ export class ClientesComponent implements OnInit {
   searchTerm = '';
   loading = false;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedClientes(): Cliente[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredClientes.slice(start, start + this.pageSize);
+  }
+
   showModal = false;
   editMode = false;
   selectedId: number | null = null;
@@ -46,6 +54,7 @@ export class ClientesComponent implements OnInit {
       (c.telefono?.includes(term) ?? false) ||
       (c.email?.toLowerCase().includes(term) ?? false)
     );
+    this.currentPage = 1;
   }
 
   openCreate(): void {

@@ -60,18 +60,11 @@ public class TecnoMovilDbContext : DbContext
             .HasIndex(a => a.NombreAtributo)
             .IsUnique();
 
-        // Reparacion_Repuesto - Índices filtrados
+        // Reparacion_Repuesto - Índice único por producto y reparación
         modelBuilder.Entity<ReparacionRepuesto>()
             .HasIndex(rr => new { rr.IdReparacion, rr.IdProducto })
             .IsUnique()
-            .HasFilter("[id_serial] IS NULL")
-            .HasDatabaseName("UX_RR_NoSerial");
-
-        modelBuilder.Entity<ReparacionRepuesto>()
-            .HasIndex(rr => new { rr.IdReparacion, rr.IdSerial })
-            .IsUnique()
-            .HasFilter("[id_serial] IS NOT NULL")
-            .HasDatabaseName("UX_RR_ConSerial");
+            .HasDatabaseName("UX_RR_ReparacionProducto");
 
         // Índices adicionales del schema
         modelBuilder.Entity<Producto>()
@@ -208,12 +201,7 @@ public class TecnoMovilDbContext : DbContext
             .HasForeignKey(rr => rr.IdProducto)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ReparacionRepuesto -> Serial (Restrict)
-        modelBuilder.Entity<ReparacionRepuesto>()
-            .HasOne(rr => rr.Serial)
-            .WithMany()
-            .HasForeignKey(rr => rr.IdSerial)
-            .OnDelete(DeleteBehavior.Restrict);
+
 
         // AnalisisIA -> DetalleAnalisisIA (Cascade)
         modelBuilder.Entity<DetalleAnalisisIA>()

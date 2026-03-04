@@ -16,6 +16,14 @@ export class UsuariosComponent implements OnInit {
   searchTerm = '';
   loading = false;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedUsuarios(): Usuario[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredUsuarios.slice(start, start + this.pageSize);
+  }
+
   showModal = false;
   editMode = false;
   selectedId: number | null = null;
@@ -68,6 +76,7 @@ export class UsuariosComponent implements OnInit {
       u.identificacion.includes(term) ||
       u.rol.toLowerCase().includes(term)
     );
+    this.currentPage = 1;
   }
 
   openCreate(): void {

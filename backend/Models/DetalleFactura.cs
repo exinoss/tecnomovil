@@ -16,8 +16,6 @@ public class DetalleFactura
     [Column("id_producto")]
     public int? IdProducto { get; set; }
 
-    [Column("id_serial")]
-    public int? IdSerial { get; set; }
 
     [Column("id_reparacion")]
     public int? IdReparacion { get; set; }
@@ -44,8 +42,6 @@ public class DetalleFactura
     [ForeignKey("IdProducto")]
     public virtual Producto? Producto { get; set; }
 
-    [ForeignKey("IdSerial")]
-    public virtual ProductoSerial? Serial { get; set; }
 
     [ForeignKey("IdReparacion")]
     public virtual Reparacion? Reparacion { get; set; }

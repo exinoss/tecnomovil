@@ -18,6 +18,14 @@ export class InventarioComponent implements OnInit {
   loading = true;
   tiposMovimiento = TIPOS_MOVIMIENTO;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 15;
+  get pagedMovimientos(): MovimientoInventario[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredMovimientos.slice(start, start + this.pageSize);
+  }
+
   searchTerm = '';
   filterTipo = '';
 
@@ -35,6 +43,60 @@ export class InventarioComponent implements OnInit {
   };
 
   isAdmin = false;
+  mensajeErrorStock = '';
+
+  get signoMovimiento(): string {
+    switch (this.form.tipo) {
+      case 'Compra':
+      case 'Devolucion':
+        return '+';
+      case 'Venta':
+        return '-';
+      case 'Ajuste':
+        return '±';
+      default:
+        return '';
+    }
+  }
+
+  get classSignoMovimiento(): string {
+    switch (this.form.tipo) {
+      case 'Compra':
+      case 'Devolucion':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'Venta':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'Ajuste':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  }
+
+  get textoAyudaMovimiento(): string {
+    switch (this.form.tipo) {
+      case 'Compra':
+        return 'La cantidad ingresada se SUMARÁ al stock actual del producto.';
+      case 'Devolucion':
+        return 'Seleccione si la devolución SUMARÁ (de cliente a tienda) o RESTARÁ (de tienda a proveedor).';
+      case 'Venta':
+        return 'La cantidad ingresada se RESTARÁ del stock actual del producto.';
+      case 'Ajuste':
+        return 'Seleccione Añadir o Quitar e ingrese la cantidad a ajustar.';
+      default:
+        return '';
+    }
+  }
+
+  // Para Ajustes y Devoluciones, definir si es suma o resta
+  operacionAuxiliar: 'suma' | 'resta' = 'suma';
+
+  // Cuando cambie el tipo
+  onTipoChange(): void {
+    this.mensajeErrorStock = '';
+    this.form.cantidad = 1;
+    this.operacionAuxiliar = 'suma';
+  }
 
   constructor(
     private inventarioService: InventarioService,
@@ -47,6 +109,10 @@ export class InventarioComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMovimientos();
+    this.loadProductos();
+  }
+
+  loadProductos(): void {
     this.productoService.getAll().subscribe(data => this.productos = data);
   }
 
@@ -78,23 +144,53 @@ export class InventarioComponent implements OnInit {
       );
     }
     this.filteredMovimientos = data;
+    this.currentPage = 1;
   }
 
   openCreate(): void {
     this.showModal = true;
+    this.operacionAuxiliar = 'suma';
     this.form = { idProducto: 0, tipo: 'Compra', cantidad: 1, detalle: '' };
   }
 
   save(): void {
-    if (!this.form.idProducto || this.form.cantidad <= 0) {
-      this.toast.show('Complete los campos requeridos', 'error');
+    this.mensajeErrorStock = '';
+
+    if (!this.form.idProducto || !this.form.cantidad || this.form.cantidad <= 0) {
+      this.toast.show('La cantidad debe ser mayor a 0 y es obligatoria', 'error');
       return;
     }
-    this.inventarioService.create(this.form).subscribe({
+
+    // Calcula cantidad real a mandar
+    let cantidadReal = Math.abs(this.form.cantidad);
+    if (this.form.tipo === 'Venta') {
+      cantidadReal = -cantidadReal;
+    } else if (this.form.tipo === 'Ajuste' || this.form.tipo === 'Devolucion') {
+      if (this.operacionAuxiliar === 'resta') {
+        cantidadReal = -cantidadReal;
+      }
+    }
+
+    // Validar stock si restamos
+    if (cantidadReal < 0) {
+      const prodSelected = this.productos.find(p => p.idProducto == this.form.idProducto);
+      if (prodSelected) {
+        if (prodSelected.stockActual < Math.abs(cantidadReal)) {
+          this.mensajeErrorStock = `Stock insuficiente. Solo hay ${prodSelected.stockActual} unidades disponibles.`;
+          return;
+        }
+      }
+    }
+
+    // Preparar el dto
+    const payload = { ...this.form, cantidad: cantidadReal };
+
+    this.inventarioService.create(payload).subscribe({
       next: () => {
         this.toast.show('Movimiento registrado', 'success');
         this.showModal = false;
         this.loadMovimientos();
+        this.loadProductos(); // Recargar productos para refrescar stock en el select
       },
       error: (err) => this.toast.show(err.error?.message || 'Error al registrar', 'error')
     });
@@ -119,5 +215,27 @@ export class InventarioComponent implements OnInit {
       case 'Devolucion': return 'bg-purple-100 text-purple-700';
       default: return 'bg-gray-100 text-gray-700';
     }
+  }
+
+  getDisplayCantidad(m: MovimientoInventario): string {
+    const cant = Math.abs(m.cantidad);
+    // Forzar el signo para movimientos fijos
+    if (m.tipo === 'Compra') return '+' + cant;
+    if (m.tipo === 'Venta' || m.tipo === 'ConsumoReparacion') return '-' + cant;
+    
+    // Para Ajuste y Devolucion, puede ser positivo o negativo
+    if (m.cantidad > 0) return '+' + cant;
+    if (m.cantidad < 0) return '-' + cant;
+    return cant.toString();
+  }
+
+  getColorClass(m: MovimientoInventario): string {
+    if (m.tipo === 'Compra') return 'text-green-600';
+    if (m.tipo === 'Venta' || m.tipo === 'ConsumoReparacion') return 'text-red-600';
+    
+    // Para Ajuste y Devolucion depende de la cantidad guardada
+    if (m.cantidad > 0) return 'text-green-600';
+    if (m.cantidad < 0) return 'text-red-600';
+    return 'text-gray-600';
   }
 }

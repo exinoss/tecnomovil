@@ -38,7 +38,6 @@ public class ReparacionRepuestoDto
     [Required(ErrorMessage = "El producto es requerido")]
     public int IdProducto { get; set; }
 
-    public int? IdSerial { get; set; }
 
     [Required(ErrorMessage = "La cantidad es requerida")]
     [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0")]

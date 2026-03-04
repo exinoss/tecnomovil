@@ -43,16 +43,7 @@ BEGIN
         GROUP BY id_producto
     ) x ON x.id_producto = p.id_producto;
 
-    UPDATE ps
-    SET ps.estado =
-        CASE
-            WHEN i.tipo IN ('Venta','ConsumoReparacion') THEN 'Vendido'
-            WHEN i.tipo IN ('Devolucion','Compra') THEN 'Disponible'
-            ELSE ps.estado
-        END
-    FROM dbo.Producto_Serial ps
-    JOIN inserted i ON i.id_serial = ps.id_serial
-    WHERE i.id_serial IS NOT NULL;
+
 END;
 GO
 
@@ -65,10 +56,9 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.Movimiento_Inventario
-        (id_producto, id_serial, tipo, cantidad, referencia_tabla, referencia_id, detalle)
+        (id_producto, tipo, cantidad, referencia_tabla, referencia_id, detalle)
     SELECT
         i.id_producto,
-        i.id_serial,
         'Venta',
         -i.cantidad,
         'Factura',
@@ -89,10 +79,9 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.Movimiento_Inventario
-        (id_producto, id_serial, tipo, cantidad, referencia_tabla, referencia_id, detalle)
+        (id_producto, tipo, cantidad, referencia_tabla, referencia_id, detalle)
     SELECT
         i.id_producto,
-        i.id_serial,
         'ConsumoReparacion',
         -i.cantidad,
         'Reparacion',
@@ -102,28 +91,6 @@ BEGIN
 END;
 GO
 
-/* E) Validación: serial pertenece al producto en Reparacion_Repuesto */
-CREATE OR ALTER TRIGGER dbo.trg_RR_ValidarSerialProducto
-ON dbo.Reparacion_Repuesto
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        JOIN dbo.Producto_Serial ps ON ps.id_serial = i.id_serial
-        WHERE i.id_serial IS NOT NULL
-          AND ps.id_producto <> i.id_producto
-    )
-    BEGIN
-        RAISERROR('El id_serial no pertenece al id_producto indicado en Reparacion_Repuesto.', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
-    END
-END;
-GO
 
 /* F) Totales Factura usando iva_porcentaje histórico */
 CREATE OR ALTER TRIGGER dbo.trg_DetalleFactura_RecalcularTotales

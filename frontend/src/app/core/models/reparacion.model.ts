@@ -8,9 +8,6 @@ export interface Reparacion {
   diagnosticoFinal?: string;
   costoManoObra: number;
   estado: string;
-  aprobado?: boolean;
-  fechaAprobacion?: string;
-  motivoRechazo?: string;
   fechaIngreso: string;
   cliente?: { idCliente: number; nombres: string; identificacion: string };
   tecnico?: { idUsuario: number; nombres: string };
@@ -26,25 +23,23 @@ export interface ReparacionDto {
   diagnosticoFinal?: string;
   costoManoObra: number;
   estado: string;
-  aprobado?: boolean;
-  motivoRechazo?: string;
 }
 
 export interface ReparacionRepuesto {
   idReparacionRepuesto: number;
   idReparacion: number;
   idProducto: number;
-  idSerial?: number;
+
   cantidad: number;
   costoUnitario?: number;
   precioCobrado?: number;
   producto?: { idProducto: number; nombreProducto: string };
-  serial?: { idSerial: number; numeroSerieImei: string };
+
 }
 
 export interface ReparacionRepuestoDto {
   idProducto: number;
-  idSerial?: number;
+
   cantidad: number;
   costoUnitario?: number;
   precioCobrado?: number;
@@ -56,5 +51,5 @@ export interface AprobacionDto {
 }
 
 export const ESTADOS_REPARACION = [
-  'Recibido', 'Cotizado', 'Aprobado', 'En Proceso', 'Reparado', 'Entregado', 'Rechazado', 'Cancelado'
+  'Recibido', 'Reparado', 'Facturado', 'Cancelado'
 ];

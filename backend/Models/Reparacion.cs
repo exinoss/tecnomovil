@@ -38,7 +38,7 @@ public class Reparacion
     [Required]
     [MaxLength(20)]
     [Column("estado")]
-    public string Estado { get; set; } = "Recibido"; // Recibido, Cotizado, Aprobado, En Proceso, Reparado, Entregado, Rechazado, Cancelado
+    public string Estado { get; set; } = "Recibido"; 
 
     [Column("aprobado")]
     public bool? Aprobado { get; set; }

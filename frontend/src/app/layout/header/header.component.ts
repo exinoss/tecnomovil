@@ -6,7 +6,7 @@ import { UsuarioInfo } from '../../core/models/auth.model';
   selector: 'app-header',
   standalone: false,
   template: `
-    <header class="bg-blue-600 text-white h-14 flex items-center justify-between px-4 shadow z-30 relative">
+    <header class="bg-blue-600 text-white h-14 flex items-center justify-between px-4 shadow z-50 relative">
       <div class="flex items-center gap-3">
         <button (click)="toggleSidebar.emit()" class="p-1.5 rounded hover:bg-blue-700 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

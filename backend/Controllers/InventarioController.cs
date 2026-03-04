@@ -25,7 +25,7 @@ public class InventarioController : ControllerBase
     {
         return await _context.MovimientosInventario
             .Include(m => m.Producto)
-            .Include(m => m.Serial)
+
             .OrderByDescending(m => m.Fecha)
             .Take(limite ?? 100)
             .ToListAsync();
@@ -35,7 +35,7 @@ public class InventarioController : ControllerBase
     public async Task<ActionResult<IEnumerable<MovimientoInventario>>> GetByProducto(int idProducto)
     {
         return await _context.MovimientosInventario
-            .Include(m => m.Serial)
+
             .Where(m => m.IdProducto == idProducto)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
@@ -46,7 +46,7 @@ public class InventarioController : ControllerBase
     {
         return await _context.MovimientosInventario
             .Include(m => m.Producto)
-            .Include(m => m.Serial)
+
             .Where(m => m.Tipo == tipo)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
@@ -59,7 +59,7 @@ public class InventarioController : ControllerBase
     {
         return await _context.MovimientosInventario
             .Include(m => m.Producto)
-            .Include(m => m.Serial)
+
             .Where(m => m.Fecha >= desde && m.Fecha <= hasta)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
@@ -69,10 +69,24 @@ public class InventarioController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<MovimientoInventario>> Create([FromBody] MovimientoInventarioDto dto)
     {
+        if (dto.Cantidad < 0)
+        {
+            var producto = await _context.Productos.FindAsync(dto.IdProducto);
+            if (producto == null)
+            {
+                return NotFound(new { message = "Producto no encontrado." });
+            }
+
+            if (producto.StockActual < Math.Abs(dto.Cantidad))
+            {
+                return BadRequest(new { message = $"Stock insuficiente. Actualmente hay {producto.StockActual} unidades disponibles." });
+            }
+        }
+
         var movimiento = new MovimientoInventario
         {
             IdProducto = dto.IdProducto,
-            IdSerial = dto.IdSerial,
+
             Tipo = dto.Tipo,
             Cantidad = dto.Cantidad,
             ReferenciaTabla = dto.ReferenciaTabla,

@@ -8,6 +8,7 @@ import { Cliente } from '../../core/models/cliente.model';
 import { Producto } from '../../core/models/producto.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ValidacionService } from '../../core/services/validacion.service';
 
 @Component({
   selector: 'app-reparaciones',
@@ -22,34 +23,41 @@ export class ReparacionesComponent implements OnInit {
   loading = false;
   estados = ESTADOS_REPARACION;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedReparaciones(): Reparacion[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredReparaciones.slice(start, start + this.pageSize);
+  }
+
   clientes: Cliente[] = [];
   tecnicos: any[] = [];
   productos: Producto[] = [];
 
-  // Modal crear/editar
+  // Modal crear/editar/detalle (Gestión unificada)
   showModal = false;
   editMode = false;
   selectedId: number | null = null;
   form: ReparacionDto = { idCliente: 0, idUsuario: 0, modeloEquipo: '', serieImeiIngreso: '', costoManoObra: 0, estado: 'Recibido' };
-
-  // Modal detalle
-  showDetalle = false;
-  reparacionDetalle: Reparacion | null = null;
+  
+  // Datos extendidos cuando se edita/ve
+  reparacionCompleta: Reparacion | null = null;
   repuestos: ReparacionRepuesto[] = [];
+  
+  // Acordeones UI
+  tabView: string = 'datos';
 
   // Modal repuesto
   showRepuestoModal = false;
   repuestoForm: ReparacionRepuestoDto = { idProducto: 0, cantidad: 1 };
 
-  // Modal aprobar
-  showAprobarModal = false;
-  aprobarId: number | null = null;
-  motivoRechazo = '';
-
   // Modal cambiar estado
   showEstadoModal = false;
   estadoId: number | null = null;
   nuevoEstado = '';
+  estadoReparacion: Reparacion | null = null;
+  showCostoWarning = false;
 
   userRol = '';
 
@@ -59,7 +67,8 @@ export class ReparacionesComponent implements OnInit {
     private usuarioService: UsuarioService,
     private productoService: ProductoService,
     private toast: ToastService,
-    private auth: AuthService
+    private auth: AuthService,
+    private validacion: ValidacionService
   ) {
     this.userRol = this.auth.getRol();
   }
@@ -95,11 +104,15 @@ export class ReparacionesComponent implements OnInit {
       const matchEstado = !this.filterEstado || r.estado === this.filterEstado;
       return matchTerm && matchEstado;
     });
+    this.currentPage = 1;
   }
 
   openCreate(): void {
     this.editMode = false;
     this.selectedId = null;
+    this.reparacionCompleta = null;
+    this.repuestos = [];
+    this.tabView = 'datos';
     this.form = { idCliente: 0, idUsuario: 0, modeloEquipo: '', serieImeiIngreso: '', costoManoObra: 0, estado: 'Recibido' };
     this.showModal = true;
   }
@@ -107,6 +120,9 @@ export class ReparacionesComponent implements OnInit {
   openEdit(r: Reparacion): void {
     this.editMode = true;
     this.selectedId = r.idReparacion;
+    this.tabView = 'datos';
+    
+    // Configurar form basico temporal para no ver vacio
     this.form = {
       idCliente: r.idCliente,
       idUsuario: r.idUsuario,
@@ -117,23 +133,55 @@ export class ReparacionesComponent implements OnInit {
       costoManoObra: r.costoManoObra,
       estado: r.estado
     };
-    this.showModal = true;
+    
+    // Obtener detalles (repuestos y data fresca)
+    this.reparacionService.getById(r.idReparacion).subscribe({
+      next: (data) => {
+        this.reparacionCompleta = data;
+        this.repuestos = data.repuestos || [];
+        this.form.costoManoObra = data.costoManoObra;
+        this.showModal = true;
+      },
+      error: () => {
+        this.toast.show('Error al cargar detalle', 'error');
+        this.showModal = true;
+      }
+    });
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.reparacionCompleta = null;
+  }
+
+  isBloqueado(): boolean {
+    if (!this.editMode) return false;
+    const est = this.form.estado;
+    return est === 'Reparado' || est === 'Cancelado' || est === 'Facturado';
   }
 
   save(): void {
-    if (!this.form.idCliente || !this.form.idUsuario || !this.form.modeloEquipo.trim() || !this.form.serieImeiIngreso.trim()) {
-      this.toast.show('Complete los campos requeridos', 'warning');
+    if (this.isBloqueado()) {
+      this.toast.show('Esta reparación ya está finalizada y no puede modificarse', 'warning');
       return;
     }
+
+    if (!this.form.idCliente || !this.form.idUsuario) {
+      this.toast.show('Seleccione cliente y técnico.', 'warning');
+      return;
+    }
+
+    const rModelo = this.validacion.requerido(this.form.modeloEquipo, 'El modelo del equipo');
+    if (!rModelo.valid) { this.toast.show(rModelo.mensaje, 'warning'); return; }
+
+    const rImei = this.validacion.imei(this.form.serieImeiIngreso);
+    if (!rImei.valid) { this.toast.show(rImei.mensaje, 'warning'); return; }
 
     if (this.editMode && this.selectedId) {
       this.reparacionService.update(this.selectedId, this.form).subscribe({
         next: () => {
           this.toast.show('Reparación actualizada', 'success');
+          // Update local data without closing if we are in repuestos? better to close and refresh list
           this.closeModal();
           this.loadData();
         },
@@ -151,23 +199,6 @@ export class ReparacionesComponent implements OnInit {
     }
   }
 
-  // Detalle
-  openDetalle(r: Reparacion): void {
-    this.reparacionService.getById(r.idReparacion).subscribe({
-      next: (data) => {
-        this.reparacionDetalle = data;
-        this.repuestos = data.repuestos || [];
-        this.showDetalle = true;
-      },
-      error: () => this.toast.show('Error al cargar detalle', 'error')
-    });
-  }
-
-  closeDetalle(): void {
-    this.showDetalle = false;
-    this.reparacionDetalle = null;
-  }
-
   // Repuestos
   openRepuestoModal(): void {
     this.repuestoForm = { idProducto: 0, cantidad: 1 };
@@ -179,12 +210,15 @@ export class ReparacionesComponent implements OnInit {
       this.toast.show('Seleccione producto y cantidad', 'warning');
       return;
     }
-    if (this.reparacionDetalle) {
-      this.reparacionService.addRepuesto(this.reparacionDetalle.idReparacion, this.repuestoForm).subscribe({
+    if (this.reparacionCompleta) {
+      this.reparacionService.addRepuesto(this.reparacionCompleta.idReparacion, this.repuestoForm).subscribe({
         next: () => {
           this.toast.show('Repuesto agregado', 'success');
           this.showRepuestoModal = false;
-          this.openDetalle(this.reparacionDetalle!);
+          // Refresh list locally
+          this.openEdit(this.reparacionCompleta!);
+          // set tabview to repuestos so it doesn't switch back
+          setTimeout(() => this.tabView = 'repuestos', 100);
         },
         error: (err) => this.toast.show(err.error?.message || 'Error al agregar repuesto', 'error')
       });
@@ -195,7 +229,10 @@ export class ReparacionesComponent implements OnInit {
     this.reparacionService.deleteRepuesto(id).subscribe({
       next: () => {
         this.toast.show('Repuesto eliminado', 'success');
-        this.openDetalle(this.reparacionDetalle!);
+        if (this.reparacionCompleta) {
+           this.openEdit(this.reparacionCompleta);
+           setTimeout(() => this.tabView = 'repuestos', 100);
+        }
       },
       error: () => this.toast.show('Error al eliminar repuesto', 'error')
     });
@@ -203,56 +240,42 @@ export class ReparacionesComponent implements OnInit {
 
   // Estado
   openEstadoModal(r: Reparacion): void {
+    if (r.estado === 'Reparado' || r.estado === 'Cancelado' || r.estado === 'Facturado') {
+      this.toast.show('Esta reparación ya fue ' + r.estado.toLowerCase(), 'info');
+      return;
+    }
     this.estadoId = r.idReparacion;
-    this.nuevoEstado = r.estado;
+    this.estadoReparacion = r;
+    this.showCostoWarning = false;
     this.showEstadoModal = true;
   }
 
-  cambiarEstado(): void {
-    if (this.estadoId && this.nuevoEstado) {
-      this.reparacionService.cambiarEstado(this.estadoId, this.nuevoEstado).subscribe({
-        next: () => {
-          this.toast.show('Estado actualizado', 'success');
-          this.showEstadoModal = false;
-          this.loadData();
-        },
-        error: () => this.toast.show('Error al cambiar estado', 'error')
-      });
+  cambiarEstado(nuevo: 'Reparado' | 'Cancelado'): void {
+    if (!this.estadoId) return;
+
+    // Si es "Reparado" y el costoManoObra es 0, mostrar aviso
+    if (nuevo === 'Reparado' && this.estadoReparacion && this.estadoReparacion.costoManoObra === 0 && !this.showCostoWarning) {
+      this.showCostoWarning = true;
+      return;
     }
+
+    this.reparacionService.cambiarEstado(this.estadoId, nuevo).subscribe({
+      next: () => {
+        this.toast.show(`Reparación marcada como ${nuevo}`, 'success');
+        this.showEstadoModal = false;
+        this.showCostoWarning = false;
+        this.loadData();
+      },
+      error: () => this.toast.show('Error al cambiar estado', 'error')
+    });
   }
 
-  // Aprobar
-  openAprobarModal(r: Reparacion): void {
-    this.aprobarId = r.idReparacion;
-    this.motivoRechazo = '';
-    this.showAprobarModal = true;
-  }
-
-  aprobar(aprobado: boolean): void {
-    if (this.aprobarId !== null) {
-      this.reparacionService.aprobar(this.aprobarId, {
-        aprobado,
-        motivoRechazo: aprobado ? undefined : this.motivoRechazo
-      }).subscribe({
-        next: () => {
-          this.toast.show(aprobado ? 'Reparación aprobada' : 'Reparación rechazada', 'success');
-          this.showAprobarModal = false;
-          this.loadData();
-        },
-        error: () => this.toast.show('Error al procesar aprobación', 'error')
-      });
-    }
-  }
 
   getEstadoClass(estado: string): string {
     const clases: Record<string, string> = {
       'Recibido': 'bg-gray-100 text-gray-700',
-      'Cotizado': 'bg-yellow-100 text-yellow-700',
-      'Aprobado': 'bg-blue-100 text-blue-700',
-      'En Proceso': 'bg-blue-100 text-blue-700',
       'Reparado': 'bg-green-100 text-green-700',
-      'Entregado': 'bg-green-100 text-green-700',
-      'Rechazado': 'bg-red-100 text-red-700',
+      'Facturado': 'bg-purple-100 text-purple-700',
       'Cancelado': 'bg-red-100 text-red-700'
     };
     return clases[estado] || 'bg-gray-100 text-gray-700';

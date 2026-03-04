@@ -23,6 +23,14 @@ export class ProductosComponent implements OnInit {
   loading = false;
   apiBase = environment.apiUrl.replace('/api', '');
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedProductos(): Producto[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredProductos.slice(start, start + this.pageSize);
+  }
+
   // Modal producto
   showModal = false;
   editMode = false;
@@ -39,6 +47,8 @@ export class ProductosComponent implements OnInit {
   serialForm: ProductoSerialDto = { numeroSerieImei: '', estado: 'Disponible' };
   loadingSeriales = false;
   estadosSerial = ['Disponible', 'Vendido', 'Reparacion', 'Inhabilitado'];
+  // Tipo de serial para validación
+  tipoSerial: 'IMEI' | 'Serial' = 'IMEI';
   // Seriales pendientes para modo creación
   pendingSeriales: string[] = [];
   pendingSerialInput = '';
@@ -97,6 +107,7 @@ export class ProductosComponent implements OnInit {
       const matchCat = this.filterCategoria === 0 || p.idCategoria === this.filterCategoria;
       return matchTerm && matchCat;
     });
+    this.currentPage = 1;
   }
 
   openCreate(): void {
@@ -109,6 +120,8 @@ export class ProductosComponent implements OnInit {
     this.seriales = [];
     this.pendingSeriales = [];
     this.pendingSerialInput = '';
+    this.tipoSerial = 'IMEI';
+    this.serialForm = { numeroSerieImei: '', estado: 'Disponible' };
     this.atributosProducto = [];
     this.pendingAtributos = [];
     this.resetNuevoAtributo();
@@ -147,6 +160,8 @@ export class ProductosComponent implements OnInit {
     this.pendingAtributos = [];
     this.pendingSeriales = [];
     this.pendingSerialInput = '';
+    this.tipoSerial = 'IMEI';
+    this.serialForm = { numeroSerieImei: '', estado: 'Disponible' };
     this.resetNuevoAtributo();
   }
 
@@ -282,6 +297,25 @@ export class ProductosComponent implements OnInit {
   }
 
   // ──── Seriales (dentro del modal) ────
+  getImeiCount(list: any[]): number {
+    return list.filter(item => {
+      const val = typeof item === 'string' ? item : item.numeroSerieImei;
+      return /^\d{15}$/.test(val);
+    }).length;
+  }
+
+  getSerialCount(list: any[]): number {
+    return list.length - this.getImeiCount(list);
+  }
+
+  isAddDisabled(list: any[]): boolean {
+    if (this.tipoSerial === 'IMEI') {
+      return this.getImeiCount(list) >= 2;
+    } else {
+      return this.getSerialCount(list) >= 1;
+    }
+  }
+
   loadSeriales(idProducto: number): void {
     this.loadingSeriales = true;
     this.productoService.getSeriales(idProducto).subscribe({
@@ -291,14 +325,18 @@ export class ProductosComponent implements OnInit {
   }
 
   addSerial(): void {
+    if (this.isAddDisabled(this.seriales)) {
+      this.toast.show(`Límite máximo de ${this.tipoSerial === 'IMEI' ? '2 IMEIs' : '1 Serial'} alcanzado.`, 'warning');
+      return;
+    }
+
     const val = this.serialForm.numeroSerieImei.trim();
-    // Si el producto es serializado con IMEI usamos validación estricta de 15 dígitos,
-    // si es serie alfanumérica usamos validación de serial genérico.
-    const r = /^\d{15}$/.test(val)
+    const r = this.tipoSerial === 'IMEI'
       ? this.validacion.imei(val)
       : this.validacion.serial(val);
     if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
 
+    this.serialForm.estado = 'Disponible'; // siempre Disponible
     const idProducto = this.editMode ? this.selectedId! : null;
     if (!idProducto) return;
     this.productoService.createSerial(idProducto, this.serialForm).subscribe({
@@ -314,10 +352,15 @@ export class ProductosComponent implements OnInit {
 
   // Seriales pendientes para modo creación
   addPendingSerial(): void {
+    if (this.isAddDisabled(this.pendingSeriales)) {
+      this.toast.show(`Límite máximo de ${this.tipoSerial === 'IMEI' ? '2 IMEIs' : '1 Serial'} alcanzado.`, 'warning');
+      return;
+    }
+
     const val = this.pendingSerialInput.trim();
     if (!val) { this.toast.show('Ingrese el número de serie/IMEI.', 'warning'); return; }
 
-    const r = /^\d{15}$/.test(val)
+    const r = this.tipoSerial === 'IMEI'
       ? this.validacion.imei(val)
       : this.validacion.serial(val);
     if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
@@ -472,11 +515,17 @@ export class ProductosComponent implements OnInit {
   }
 
   addSerialExterno(): void {
+    if (this.isAddDisabled(this.seriales)) {
+      this.toast.show(`Límite máximo de ${this.tipoSerial === 'IMEI' ? '2 IMEIs' : '1 Serial'} alcanzado.`, 'warning');
+      return;
+    }
+
     const val = this.serialForm.numeroSerieImei.trim();
-    const r = /^\d{15}$/.test(val)
+    const r = this.tipoSerial === 'IMEI'
       ? this.validacion.imei(val)
       : this.validacion.serial(val);
     if (!r.valid) { this.toast.show(r.mensaje, 'warning'); return; }
+    this.serialForm.estado = 'Disponible';
     this.productoService.createSerial(this.productoSerialActual!.idProducto, this.serialForm).subscribe({
       next: () => {
         this.toast.show('Serial agregado', 'success');
@@ -484,7 +533,7 @@ export class ProductosComponent implements OnInit {
         this.loadSerialesExterno(this.productoSerialActual!.idProducto);
         this.loadData();
       },
-      error: (err) => this.toast.show(err.error?.message || 'Error al agregar serial', 'error')
+      error: (err: any) => this.toast.show(err.error?.message || 'Error al agregar serial', 'error')
     });
   }
 }

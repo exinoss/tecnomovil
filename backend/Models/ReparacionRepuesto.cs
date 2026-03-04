@@ -16,8 +16,6 @@ public class ReparacionRepuesto
     [Column("id_producto")]
     public int IdProducto { get; set; }
 
-    [Column("id_serial")]
-    public int? IdSerial { get; set; }
 
     [Column("cantidad")]
     public int Cantidad { get; set; }
@@ -35,6 +33,4 @@ public class ReparacionRepuesto
     [ForeignKey("IdProducto")]
     public virtual Producto? Producto { get; set; }
 
-    [ForeignKey("IdSerial")]
-    public virtual ProductoSerial? Serial { get; set; }
 }

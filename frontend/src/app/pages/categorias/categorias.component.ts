@@ -14,6 +14,14 @@ export class CategoriasComponent implements OnInit {
   searchTerm = '';
   loading = false;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedCategorias(): Categoria[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredCategorias.slice(start, start + this.pageSize);
+  }
+
   // Modal
   showModal = false;
   editMode = false;
@@ -46,6 +54,7 @@ export class CategoriasComponent implements OnInit {
     this.filteredCategorias = this.categorias.filter(c =>
       c.nombreCategoria.toLowerCase().includes(term)
     );
+    this.currentPage = 1;
   }
 
   openCreate(): void {

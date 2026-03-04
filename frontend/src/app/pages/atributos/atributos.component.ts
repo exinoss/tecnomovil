@@ -14,6 +14,14 @@ export class AtributosComponent implements OnInit {
   searchTerm = '';
   loading = true;
 
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  get pagedAtributos(): Atributo[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredAtributos.slice(start, start + this.pageSize);
+  }
+
   showModal = false;
   editMode = false;
   selectedId = 0;
@@ -51,6 +59,7 @@ export class AtributosComponent implements OnInit {
       a.nombreAtributo.toLowerCase().includes(term) ||
       a.tipoDato.toLowerCase().includes(term)
     );
+    this.currentPage = 1;
   }
 
   openCreate(): void {
