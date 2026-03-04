@@ -24,6 +24,25 @@ export interface FacturaResponse {
   detalles: DetalleFacturaDto[];
 }
 
+export interface FacturaListItem {
+  idFactura: number;
+  fecha: string;
+  ivaPorcentaje: number;
+  subtotal: number;
+  iva: number;
+  total: number;
+  clienteNombre: string;
+  vendedorNombre: string;
+}
+
+export interface FacturaPagedResponse {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  items: FacturaListItem[];
+}
+
 export interface DetalleFactura {
   idDetalle: number;
   idFactura: number;

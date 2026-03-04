@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ProductoService } from '../../core/services/producto.service';
 import { CategoriaService } from '../../core/services/categoria.service';
 import { AtributoService } from '../../core/services/atributo.service';
-import { Producto, ProductoDto, ProductoSerial, ProductoSerialDto, ProductoAtributo, ProductoAtributoDto } from '../../core/models/producto.model';
+import { Producto, ProductoDto, ProductoSerial, ProductoSerialDto, ProductoAtributo, ProductoAtributoDto, ProductoListItem } from '../../core/models/producto.model';
 import { Categoria } from '../../core/models/categoria.model';
 import { Atributo } from '../../core/models/configuracion.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
@@ -15,21 +15,17 @@ import { environment } from '../../environments/environment';
   templateUrl: './productos.component.html'
 })
 export class ProductosComponent implements OnInit {
-  productos: Producto[] = [];
-  filteredProductos: Producto[] = [];
+  productos: ProductoListItem[] = [];
   categorias: Categoria[] = [];
   searchTerm = '';
   filterCategoria = 0;
   loading = false;
+  totalItems = 0;
   apiBase = environment.apiUrl.replace('/api', '');
 
   // Paginación
   currentPage = 1;
   pageSize = 10;
-  get pagedProductos(): Producto[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredProductos.slice(start, start + this.pageSize);
-  }
 
   // Modal producto
   showModal = false;
@@ -86,28 +82,30 @@ export class ProductosComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    this.productoService.getAll().subscribe({
+    this.productoService.getPaged(this.currentPage, this.pageSize, this.searchTerm, this.filterCategoria).subscribe({
       next: (data) => {
-        this.productos = data;
-        this.applyFilter();
+        this.productos = data.items;
+        this.totalItems = data.totalItems;
+        this.currentPage = data.page;
         this.loading = false;
       },
       error: () => {
         this.toast.show('Error al cargar productos', 'error');
+        this.productos = [];
+        this.totalItems = 0;
         this.loading = false;
       }
     });
   }
 
   applyFilter(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredProductos = this.productos.filter(p => {
-      const matchTerm = p.nombreProducto.toLowerCase().includes(term) ||
-                        (p.descripcion?.toLowerCase().includes(term) ?? false);
-      const matchCat = this.filterCategoria === 0 || p.idCategoria === this.filterCategoria;
-      return matchTerm && matchCat;
-    });
     this.currentPage = 1;
+    this.loadData();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadData();
   }
 
   openCreate(): void {
@@ -128,7 +126,7 @@ export class ProductosComponent implements OnInit {
     this.showModal = true;
   }
 
-  openEdit(p: Producto): void {
+  openEdit(p: ProductoListItem): void {
     this.editMode = true;
     this.selectedId = p.idProducto;
     this.activeTab = 'general';
@@ -277,7 +275,7 @@ export class ProductosComponent implements OnInit {
     }
   }
 
-  toggleActivo(p: Producto): void {
+  toggleActivo(p: ProductoListItem): void {
     const dto: ProductoDto = {
       idCategoria: p.idCategoria,
       nombreProducto: p.nombreProducto,

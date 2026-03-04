@@ -47,12 +47,12 @@
           <tr *ngIf="loading">
             <td colspan="8" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
           </tr>
-          <tr *ngIf="!loading && filteredProductos.length === 0">
+          <tr *ngIf="!loading && productos.length === 0">
             <td colspan="8" class="px-4 py-8 text-center text-gray-500">
               No se encontraron productos
             </td>
           </tr>
-          <tr *ngFor="let p of pagedProductos" class="hover:bg-gray-50">
+          <tr *ngFor="let p of productos" class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-600">{{ p.idProducto }}</td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
@@ -70,7 +70,7 @@
                 </div>
               </div>
             </td>
-            <td class="px-4 py-3 text-gray-600">{{ p.categoria?.nombreCategoria }}</td>
+            <td class="px-4 py-3 text-gray-600">{{ p.categoriaNombre }}</td>
             <td class="px-4 py-3 text-gray-800 font-medium">
               ${{ p.precioVenta | number: '1.2-2' }}
             </td>
@@ -166,10 +166,10 @@
       </table>
     </div>
     <app-pagination
-      [totalItems]="filteredProductos.length"
+      [totalItems]="totalItems"
       [pageSize]="pageSize"
       [currentPage]="currentPage"
-      (pageChange)="currentPage = $event"
+      (pageChange)="onPageChange($event)"
     >
     </app-pagination>
   </div>

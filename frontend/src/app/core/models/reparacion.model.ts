@@ -25,6 +25,29 @@ export interface ReparacionDto {
   estado: string;
 }
 
+export interface ReparacionListItem {
+  idReparacion: number;
+  idCliente: number;
+  idUsuario: number;
+  modeloEquipo: string;
+  serieImeiIngreso: string;
+  descripcionFalla?: string;
+  diagnosticoFinal?: string;
+  costoManoObra: number;
+  estado: string;
+  fechaIngreso: string;
+  clienteNombre: string;
+  tecnicoNombre: string;
+}
+
+export interface ReparacionPagedResponse {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  items: ReparacionListItem[];
+}
+
 export interface ReparacionRepuesto {
   idReparacionRepuesto: number;
   idReparacion: number;

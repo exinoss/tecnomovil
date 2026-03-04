@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FacturaService } from '../../core/services/factura.service';
-import { Factura, FacturaResponse } from '../../core/models/factura.model';
+import { Factura, FacturaListItem, FacturaResponse } from '../../core/models/factura.model';
 import { ClienteService } from '../../core/services/cliente.service';
 import { ProductoService } from '../../core/services/producto.service';
 import { ReparacionService } from '../../core/services/reparacion.service';
@@ -29,18 +29,14 @@ interface ItemFactura {
   templateUrl: './facturas.component.html'
 })
 export class FacturasComponent implements OnInit {
-  facturas: Factura[] = [];
-  filteredFacturas: Factura[] = [];
+  facturas: FacturaListItem[] = [];
   searchTerm = '';
   loading = true;
+  totalItems = 0;
 
   // Paginación
   currentPage = 1;
   pageSize = 10;
-  get pagedFacturas(): Factura[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredFacturas.slice(start, start + this.pageSize);
-  }
 
   // Vista crear factura
   showNuevaFactura = false;
@@ -82,27 +78,30 @@ export class FacturasComponent implements OnInit {
 
   loadFacturas(): void {
     this.loading = true;
-    this.facturaService.getAll().subscribe({
+    this.facturaService.getAll(this.currentPage, this.pageSize, this.searchTerm).subscribe({
       next: (data) => {
-        this.facturas = data;
-        this.applyFilter();
+        this.facturas = data.items;
+        this.totalItems = data.totalItems;
+        this.currentPage = data.page;
         this.loading = false;
       },
       error: () => {
         this.toast.show('Error al cargar facturas', 'error');
+        this.facturas = [];
+        this.totalItems = 0;
         this.loading = false;
       }
     });
   }
 
   applyFilter(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredFacturas = this.facturas.filter(f =>
-      f.idFactura.toString().includes(term) ||
-      (f.cliente?.nombres?.toLowerCase() || '').includes(term) ||
-      (f.vendedor?.nombres?.toLowerCase() || '').includes(term)
-    );
     this.currentPage = 1;
+    this.loadFacturas();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadFacturas();
   }
 
   openNuevaFactura(): void {
@@ -237,7 +236,7 @@ export class FacturasComponent implements OnInit {
     this.showNuevaFactura = false;
   }
 
-  openDetalle(factura: Factura): void {
+  openDetalle(factura: { idFactura: number }): void {
     this.facturaService.getById(factura.idFactura).subscribe({
       next: (data) => {
         this.facturaDetalle = data;

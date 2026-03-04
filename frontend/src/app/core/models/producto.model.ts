@@ -23,6 +23,27 @@ export interface ProductoDto {
   activo: boolean;
 }
 
+export interface ProductoListItem {
+  idProducto: number;
+  idCategoria: number;
+  nombreProducto: string;
+  imagen?: string;
+  descripcion?: string;
+  stockActual: number;
+  precioVenta: number;
+  esSerializado: boolean;
+  activo: boolean;
+  categoriaNombre: string;
+}
+
+export interface ProductoPagedResponse {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  items: ProductoListItem[];
+}
+
 export interface ProductoSerial {
   idSerial: number;
   idProducto: number;

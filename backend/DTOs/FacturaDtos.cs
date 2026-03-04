@@ -47,3 +47,24 @@ public class FacturaResponseDto
     public decimal Total { get; set; }
     public List<DetalleFacturaDto> Detalles { get; set; } = new();
 }
+
+public class FacturaListItemDto
+{
+    public int IdFactura { get; set; }
+    public DateTime Fecha { get; set; }
+    public decimal IvaPorcentaje { get; set; }
+    public decimal Subtotal { get; set; }
+    public decimal Iva { get; set; }
+    public decimal Total { get; set; }
+    public string ClienteNombre { get; set; } = string.Empty;
+    public string VendedorNombre { get; set; } = string.Empty;
+}
+
+public class PagedResponseDto<T>
+{
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalItems { get; set; }
+    public int TotalPages { get; set; }
+    public List<T> Items { get; set; } = new();
+}

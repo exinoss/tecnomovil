@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AnalisisIAService } from '../../core/services/analisis-ia.service';
 import { AnalisisIAResponseDTO, AnalisisIAResumenDTO, DetalleAnalisisIAResponseDTO } from '../../core/models/analisis-ia';
+import { ToastService } from '../../shared/components/toast/toast.service';
 
 @Component({
   selector: 'app-analisis-ia',
@@ -22,7 +23,10 @@ export class AnalisisIa implements OnInit {
     'Baja': 10
   };
 
-  constructor(private analisisService: AnalisisIAService) {}
+  constructor(
+    private analisisService: AnalisisIAService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.cargarHistorial();
@@ -49,14 +53,14 @@ export class AnalisisIa implements OnInit {
     this.generando = true;
     this.analisisService.generarAnalisis().subscribe({
       next: (response) => {
-        alert('Análisis generado exitosamente');
+        this.toastService.show('Análisis generado exitosamente', 'success');
         this.generando = false;
         this.cargarHistorial();
         this.verDetalle(response.idAnalisis);
       },
       error: (error) => {
         console.error('Error generando análisis', error);
-        alert('Error al generar el análisis: ' + error.message);
+        this.toastService.show('Error al generar el análisis: ' + error.message, 'error');
         this.generando = false;
       }
     });

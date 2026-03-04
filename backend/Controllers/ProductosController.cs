@@ -27,6 +27,69 @@ public class ProductosController : ControllerBase
             .ToListAsync();
     }
 
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResponseDto<ProductoListItemDto>>> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] int? idCategoria = null)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var query = _context.Productos
+            .AsNoTracking()
+            .Include(p => p.Categoria)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p =>
+                EF.Functions.Like(p.NombreProducto, $"%{search}%") ||
+                (p.Descripcion != null && EF.Functions.Like(p.Descripcion, $"%{search}%"))
+            );
+        }
+
+        if (idCategoria.HasValue && idCategoria.Value > 0)
+        {
+            query = query.Where(p => p.IdCategoria == idCategoria.Value);
+        }
+
+        var totalItems = await query.CountAsync();
+        var totalPages = totalItems == 0 ? 1 : (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        if (page > totalPages) page = totalPages;
+
+        var items = await query
+            .OrderByDescending(p => p.IdProducto)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ProductoListItemDto
+            {
+                IdProducto = p.IdProducto,
+                IdCategoria = p.IdCategoria,
+                NombreProducto = p.NombreProducto,
+                Imagen = p.Imagen,
+                Descripcion = p.Descripcion,
+                StockActual = p.StockActual,
+                PrecioVenta = p.PrecioVenta,
+                EsSerializado = p.EsSerializado,
+                Activo = p.Activo,
+                CategoriaNombre = p.Categoria != null ? p.Categoria.NombreCategoria : string.Empty
+            })
+            .ToListAsync();
+
+        return Ok(new PagedResponseDto<ProductoListItemDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            Items = items
+        });
+    }
+
     [HttpGet("activos")]
     public async Task<ActionResult<IEnumerable<Producto>>> GetActivos()
     {

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Producto, ProductoDto, ProductoSerial, ProductoSerialDto } from '../models/producto.model';
+import { Producto, ProductoDto, ProductoSerial, ProductoSerialDto, ProductoPagedResponse } from '../models/producto.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductoService {
@@ -12,6 +12,22 @@ export class ProductoService {
 
   getAll(): Observable<Producto[]> {
     return this.http.get<Producto[]>(this.apiUrl);
+  }
+
+  getPaged(page: number, pageSize: number, search?: string, idCategoria?: number): Observable<ProductoPagedResponse> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    if (search && search.trim().length > 0) {
+      params = params.set('search', search.trim());
+    }
+
+    if (idCategoria && idCategoria > 0) {
+      params = params.set('idCategoria', idCategoria);
+    }
+
+    return this.http.get<ProductoPagedResponse>(`${this.apiUrl}/paged`, { params });
   }
 
   getActivos(): Observable<Producto[]> {

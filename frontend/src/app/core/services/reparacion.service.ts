@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Reparacion, ReparacionDto, ReparacionRepuesto, ReparacionRepuestoDto, AprobacionDto } from '../models/reparacion.model';
+import { Reparacion, ReparacionDto, ReparacionRepuesto, ReparacionRepuestoDto, AprobacionDto, ReparacionPagedResponse } from '../models/reparacion.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReparacionService {
@@ -12,6 +12,22 @@ export class ReparacionService {
 
   getAll(): Observable<Reparacion[]> {
     return this.http.get<Reparacion[]>(this.apiUrl);
+  }
+
+  getPaged(page: number, pageSize: number, search?: string, estado?: string): Observable<ReparacionPagedResponse> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    if (search && search.trim().length > 0) {
+      params = params.set('search', search.trim());
+    }
+
+    if (estado && estado.trim().length > 0) {
+      params = params.set('estado', estado.trim());
+    }
+
+    return this.http.get<ReparacionPagedResponse>(`${this.apiUrl}/paged`, { params });
   }
 
   getById(id: number): Observable<Reparacion> {

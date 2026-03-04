@@ -21,13 +21,60 @@ public class FacturasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Factura>>> GetAll()
+    public async Task<ActionResult<PagedResponseDto<FacturaListItemDto>>> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null)
     {
-        return await _context.Facturas
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var query = _context.Facturas
+            .AsNoTracking()
             .Include(f => f.Cliente)
             .Include(f => f.Vendedor)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(f =>
+                EF.Functions.Like(f.IdFactura.ToString(), $"%{search}%") ||
+                (f.Cliente != null && EF.Functions.Like(f.Cliente.Nombres, $"%{search}%")) ||
+                (f.Vendedor != null && EF.Functions.Like(f.Vendedor.Nombres, $"%{search}%"))
+            );
+        }
+
+        var totalItems = await query.CountAsync();
+        var totalPages = totalItems == 0 ? 1 : (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        if (page > totalPages) page = totalPages;
+
+        var items = await query
             .OrderByDescending(f => f.Fecha)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(f => new FacturaListItemDto
+            {
+                IdFactura = f.IdFactura,
+                Fecha = f.Fecha,
+                IvaPorcentaje = f.IvaPorcentaje,
+                Subtotal = f.Subtotal,
+                Iva = f.Iva,
+                Total = f.Total,
+                ClienteNombre = f.Cliente != null ? f.Cliente.Nombres : string.Empty,
+                VendedorNombre = f.Vendedor != null ? f.Vendedor.Nombres : string.Empty
+            })
             .ToListAsync();
+
+        return Ok(new PagedResponseDto<FacturaListItemDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            Items = items
+        });
     }
 
     [HttpGet("{id}")]

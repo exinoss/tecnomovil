@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Factura, FacturaDto, FacturaResponse, DetalleFacturaDto } from '../models/factura.model';
+import { Factura, FacturaDto, FacturaResponse, DetalleFacturaDto, FacturaPagedResponse } from '../models/factura.model';
 
 @Injectable({ providedIn: 'root' })
 export class FacturaService {
@@ -10,8 +10,16 @@ export class FacturaService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<Factura[]> {
-    return this.http.get<Factura[]>(this.apiUrl);
+  getAll(page: number, pageSize: number, search?: string): Observable<FacturaPagedResponse> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    if (search && search.trim().length > 0) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<FacturaPagedResponse>(this.apiUrl, { params });
   }
 
   getById(id: number): Observable<FacturaResponse> {

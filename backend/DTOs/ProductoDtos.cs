@@ -48,3 +48,17 @@ public class ProductoSerialDto
 
     public string Estado { get; set; } = "Disponible";
 }
+
+public class ProductoListItemDto
+{
+    public int IdProducto { get; set; }
+    public int IdCategoria { get; set; }
+    public string NombreProducto { get; set; } = string.Empty;
+    public string? Imagen { get; set; }
+    public string? Descripcion { get; set; }
+    public int StockActual { get; set; }
+    public decimal PrecioVenta { get; set; }
+    public bool EsSerializado { get; set; }
+    public bool Activo { get; set; }
+    public string CategoriaNombre { get; set; } = string.Empty;
+}

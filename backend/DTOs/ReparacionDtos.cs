@@ -52,3 +52,17 @@ public class AprobacionDto
     public bool Aprobado { get; set; }
     public string? MotivoRechazo { get; set; }
 }
+
+public class ReparacionListItemDto
+{
+    public int IdReparacion { get; set; }
+    public int IdCliente { get; set; }
+    public int IdUsuario { get; set; }
+    public string ModeloEquipo { get; set; } = string.Empty;
+    public string SerieImeiIngreso { get; set; } = string.Empty;
+    public decimal CostoManoObra { get; set; }
+    public string Estado { get; set; } = string.Empty;
+    public DateTime FechaIngreso { get; set; }
+    public string ClienteNombre { get; set; } = string.Empty;
+    public string TecnicoNombre { get; set; } = string.Empty;
+}

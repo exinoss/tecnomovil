@@ -29,6 +29,83 @@ public class ReparacionesController : ControllerBase
             .ToListAsync();
     }
 
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResponseDto<ReparacionListItemDto>>> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? estado = null)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var query = _context.Reparaciones
+            .AsNoTracking()
+            .Include(r => r.Cliente)
+            .Include(r => r.Tecnico)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            if (int.TryParse(search, out var idBusqueda))
+            {
+                query = query.Where(r =>
+                    r.IdReparacion == idBusqueda ||
+                    EF.Functions.Like(r.ModeloEquipo, $"%{search}%") ||
+                    EF.Functions.Like(r.SerieImeiIngreso, $"%{search}%") ||
+                    (r.Cliente != null && EF.Functions.Like(r.Cliente.Nombres, $"%{search}%"))
+                );
+            }
+            else
+            {
+                query = query.Where(r =>
+                    EF.Functions.Like(r.ModeloEquipo, $"%{search}%") ||
+                    EF.Functions.Like(r.SerieImeiIngreso, $"%{search}%") ||
+                    (r.Cliente != null && EF.Functions.Like(r.Cliente.Nombres, $"%{search}%"))
+                );
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(estado))
+        {
+            query = query.Where(r => r.Estado == estado);
+        }
+
+        var totalItems = await query.CountAsync();
+        var totalPages = totalItems == 0 ? 1 : (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        if (page > totalPages) page = totalPages;
+
+        var items = await query
+            .OrderByDescending(r => r.FechaIngreso)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(r => new ReparacionListItemDto
+            {
+                IdReparacion = r.IdReparacion,
+                IdCliente = r.IdCliente,
+                IdUsuario = r.IdUsuario,
+                ModeloEquipo = r.ModeloEquipo,
+                SerieImeiIngreso = r.SerieImeiIngreso,
+                CostoManoObra = r.CostoManoObra,
+                Estado = r.Estado,
+                FechaIngreso = r.FechaIngreso,
+                ClienteNombre = r.Cliente != null ? r.Cliente.Nombres : string.Empty,
+                TecnicoNombre = r.Tecnico != null ? r.Tecnico.Nombres : string.Empty
+            })
+            .ToListAsync();
+
+        return Ok(new PagedResponseDto<ReparacionListItemDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            Items = items
+        });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<Reparacion>> GetById(int id)
     {

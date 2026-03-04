@@ -3,7 +3,7 @@ import { ReparacionService } from '../../core/services/reparacion.service';
 import { ClienteService } from '../../core/services/cliente.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { ProductoService } from '../../core/services/producto.service';
-import { Reparacion, ReparacionDto, ReparacionRepuesto, ReparacionRepuestoDto, ESTADOS_REPARACION } from '../../core/models/reparacion.model';
+import { Reparacion, ReparacionDto, ReparacionRepuesto, ReparacionRepuestoDto, ESTADOS_REPARACION, ReparacionListItem } from '../../core/models/reparacion.model';
 import { Cliente } from '../../core/models/cliente.model';
 import { Producto } from '../../core/models/producto.model';
 import { ToastService } from '../../shared/components/toast/toast.service';
@@ -16,20 +16,16 @@ import { ValidacionService } from '../../core/services/validacion.service';
   templateUrl: './reparaciones.component.html'
 })
 export class ReparacionesComponent implements OnInit {
-  reparaciones: Reparacion[] = [];
-  filteredReparaciones: Reparacion[] = [];
+  reparaciones: ReparacionListItem[] = [];
   searchTerm = '';
   filterEstado = '';
   loading = false;
+  totalItems = 0;
   estados = ESTADOS_REPARACION;
 
   // Paginación
   currentPage = 1;
   pageSize = 10;
-  get pagedReparaciones(): Reparacion[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredReparaciones.slice(start, start + this.pageSize);
-  }
 
   clientes: Cliente[] = [];
   tecnicos: any[] = [];
@@ -82,29 +78,30 @@ export class ReparacionesComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    this.reparacionService.getAll().subscribe({
+    this.reparacionService.getPaged(this.currentPage, this.pageSize, this.searchTerm, this.filterEstado).subscribe({
       next: (data) => {
-        this.reparaciones = data;
-        this.applyFilter();
+        this.reparaciones = data.items;
+        this.totalItems = data.totalItems;
+        this.currentPage = data.page;
         this.loading = false;
       },
       error: () => {
         this.toast.show('Error al cargar reparaciones', 'error');
+        this.reparaciones = [];
+        this.totalItems = 0;
         this.loading = false;
       }
     });
   }
 
   applyFilter(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredReparaciones = this.reparaciones.filter(r => {
-      const matchTerm = r.modeloEquipo.toLowerCase().includes(term) ||
-                        r.serieImeiIngreso.toLowerCase().includes(term) ||
-                        (r.cliente?.nombres?.toLowerCase().includes(term) ?? false);
-      const matchEstado = !this.filterEstado || r.estado === this.filterEstado;
-      return matchTerm && matchEstado;
-    });
     this.currentPage = 1;
+    this.loadData();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadData();
   }
 
   openCreate(): void {
@@ -117,7 +114,7 @@ export class ReparacionesComponent implements OnInit {
     this.showModal = true;
   }
 
-  openEdit(r: Reparacion): void {
+  openEdit(r: ReparacionListItem): void {
     this.editMode = true;
     this.selectedId = r.idReparacion;
     this.tabView = 'datos';
@@ -215,10 +212,7 @@ export class ReparacionesComponent implements OnInit {
         next: () => {
           this.toast.show('Repuesto agregado', 'success');
           this.showRepuestoModal = false;
-          // Refresh list locally
-          this.openEdit(this.reparacionCompleta!);
-          // set tabview to repuestos so it doesn't switch back
-          setTimeout(() => this.tabView = 'repuestos', 100);
+          this.refreshRepuestos();
         },
         error: (err) => this.toast.show(err.error?.message || 'Error al agregar repuesto', 'error')
       });
@@ -229,17 +223,27 @@ export class ReparacionesComponent implements OnInit {
     this.reparacionService.deleteRepuesto(id).subscribe({
       next: () => {
         this.toast.show('Repuesto eliminado', 'success');
-        if (this.reparacionCompleta) {
-           this.openEdit(this.reparacionCompleta);
-           setTimeout(() => this.tabView = 'repuestos', 100);
-        }
+        this.refreshRepuestos();
       },
       error: () => this.toast.show('Error al eliminar repuesto', 'error')
     });
   }
 
+  /** Recarga repuestos del modal abierto sin cerrar ni cambiar tab */
+  private refreshRepuestos(): void {
+    if (!this.reparacionCompleta) return;
+    this.reparacionService.getById(this.reparacionCompleta.idReparacion).subscribe({
+      next: (data) => {
+        this.reparacionCompleta = data;
+        this.repuestos = data.repuestos || [];
+        setTimeout(() => this.tabView = 'repuestos', 50);
+      },
+      error: () => this.toast.show('Error al refrescar repuestos', 'error')
+    });
+  }
+
   // Estado
-  openEstadoModal(r: Reparacion): void {
+  openEstadoModal(r: ReparacionListItem): void {
     if (r.estado === 'Reparado' || r.estado === 'Cancelado' || r.estado === 'Facturado') {
       this.toast.show('Esta reparación ya fue ' + r.estado.toLowerCase(), 'info');
       return;

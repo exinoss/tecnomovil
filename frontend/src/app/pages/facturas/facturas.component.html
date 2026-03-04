@@ -37,15 +37,15 @@
           <tr *ngIf="loading">
             <td colspan="8" class="px-4 py-8 text-center text-gray-500">Cargando...</td>
           </tr>
-          <tr *ngIf="!loading && filteredFacturas.length === 0">
+          <tr *ngIf="!loading && facturas.length === 0">
             <td colspan="8" class="px-4 py-8 text-center text-gray-500">
               No se encontraron facturas
             </td>
           </tr>
-          <tr *ngFor="let f of pagedFacturas" class="hover:bg-gray-50">
+          <tr *ngFor="let f of facturas" class="hover:bg-gray-50">
             <td class="px-4 py-3 font-medium text-blue-700">#{{ f.idFactura }}</td>
-            <td class="px-4 py-3 text-gray-800">{{ f.cliente?.nombres }}</td>
-            <td class="px-4 py-3 text-gray-600">{{ f.vendedor?.nombres }}</td>
+            <td class="px-4 py-3 text-gray-800">{{ f.clienteNombre }}</td>
+            <td class="px-4 py-3 text-gray-600">{{ f.vendedorNombre }}</td>
             <td class="px-4 py-3 text-right text-gray-600">${{ f.subtotal | number: '1.2-2' }}</td>
             <td class="px-4 py-3 text-right text-gray-600">${{ f.iva | number: '1.2-2' }}</td>
             <td class="px-4 py-3 text-right font-semibold text-gray-800">
@@ -83,10 +83,10 @@
       </table>
     </div>
     <app-pagination
-      [totalItems]="filteredFacturas.length"
+      [totalItems]="totalItems"
       [pageSize]="pageSize"
       [currentPage]="currentPage"
-      (pageChange)="currentPage = $event"
+      (pageChange)="onPageChange($event)"
     >
     </app-pagination>
   </div>
