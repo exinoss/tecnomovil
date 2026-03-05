@@ -82,11 +82,12 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.Movimiento_Inventario
-        (id_producto, tipo, cantidad, referencia_tabla, referencia_id, detalle)
+        (id_producto, tipo, cantidad, fecha, referencia_tabla, referencia_id, detalle)
     SELECT
         i.id_producto,
         'ConsumoReparacion',
         -i.cantidad,
+        GETDATE(),
         'Reparacion',
         i.id_reparacion,
         'Consumo de repuesto en reparación'
