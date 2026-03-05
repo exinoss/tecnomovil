@@ -24,7 +24,9 @@ public class FacturasController : ControllerBase
     public async Task<ActionResult<PagedResponseDto<FacturaListItemDto>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] DateTime? desde = null,
+        [FromQuery] DateTime? hasta = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
@@ -43,6 +45,17 @@ public class FacturasController : ControllerBase
                 (f.Cliente != null && EF.Functions.Like(f.Cliente.Nombres, $"%{search}%")) ||
                 (f.Vendedor != null && EF.Functions.Like(f.Vendedor.Nombres, $"%{search}%"))
             );
+        }
+
+        if (desde.HasValue)
+        {
+            query = query.Where(f => f.Fecha >= desde.Value.Date);
+        }
+
+        if (hasta.HasValue)
+        {
+            var hastaEndDate = hasta.Value.Date.AddDays(1).AddTicks(-1);
+            query = query.Where(f => f.Fecha <= hastaEndDate);
         }
 
         var totalItems = await query.CountAsync();
@@ -141,11 +154,9 @@ public class FacturasController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Factura>> Create([FromBody] FacturaDto dto)
     {
-        // Obtener ID del usuario desde el token
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         var idUsuario = dto.IdUsuario ?? int.Parse(userIdClaim?.Value ?? "0");
 
-        // Validar stock antes de crear — aplica a 'Producto' (facturas) y 'Venta Directa' (inventario)
         foreach (var detalleDto in dto.Detalles)
         {
             var esProducto = detalleDto.TipoItem == "Producto" || detalleDto.TipoItem == "Venta Directa";
@@ -169,8 +180,6 @@ public class FacturasController : ControllerBase
         _context.Facturas.Add(factura);
         await _context.SaveChangesAsync();
 
-        // Agregar detalles — el trigger trg_DetalleFactura_AfterInsert + trg_MI_AfterInsert
-        // reducen el stock automáticamente para tipo_item = 'Venta Directa'
         foreach (var detalleDto in dto.Detalles)
         {
             var detalle = new DetalleFactura
@@ -186,7 +195,6 @@ public class FacturasController : ControllerBase
             _context.DetalleFacturas.Add(detalle);
         }
 
-        // Vincular reparaciones si hay y cambiar estado a "Facturado"
         if (dto.ReparacionIds != null && dto.ReparacionIds.Any())
         {
             foreach (var idReparacion in dto.ReparacionIds)
@@ -197,19 +205,16 @@ public class FacturasController : ControllerBase
                     IdReparacion = idReparacion
                 });
 
-                // Cambiar estado de la reparación a "Facturado" y sincronizar costo
                 var reparacion = await _context.Reparaciones.FindAsync(idReparacion);
                 if (reparacion != null)
                 {
                     reparacion.Estado = "Facturado";
 
-                    // Buscar el detalle de factura correspondiente a esta reparación
                     var detalleReparacion = dto.Detalles
                         .FirstOrDefault(d => d.IdReparacion == idReparacion && d.TipoItem == "Reparacion");
                     if (detalleReparacion != null)
                     {
-                        // Actualizar el costo de mano de obra con el valor facturado
-                        reparacion.CostoManoObra = detalleReparacion.PrecioUnitario;
+                        reparacion.CostoManoObra = detalleReparacion.CostoManoObra ?? detalleReparacion.PrecioUnitario;
                     }
                 }
             }

@@ -79,6 +79,11 @@ export class UsuariosComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   openCreate(): void {
     this.editMode = false;
     this.selectedId = null;

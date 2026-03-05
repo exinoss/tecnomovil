@@ -1,8 +1,8 @@
 /* ── Overlay de carga ── */
 .loading-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 9999;
+  z-index: 50;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(4px);
   display: flex;

@@ -99,6 +99,12 @@ export class ReparacionesComponent implements OnInit {
     this.loadData();
   }
 
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.filterEstado = '';
+    this.applyFilter();
+  }
+
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadData();

@@ -62,6 +62,11 @@ export class AtributosComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   openCreate(): void {
     this.editMode = false;
     this.form = { nombreAtributo: '', tipoDato: 'Texto', unidad: '', activo: true };

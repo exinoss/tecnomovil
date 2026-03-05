@@ -113,7 +113,7 @@ export class InventarioComponent implements OnInit {
   }
 
   loadProductos(): void {
-    this.productoService.getAll().subscribe(data => this.productos = data);
+    this.productoService.getAll().subscribe(data => this.productos = data.filter(p => p.activo));
   }
 
   loadMovimientos(): void {
@@ -145,6 +145,12 @@ export class InventarioComponent implements OnInit {
     }
     this.filteredMovimientos = data;
     this.currentPage = 1;
+  }
+
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.filterTipo = '';
+    this.applyFilter();
   }
 
   openCreate(): void {

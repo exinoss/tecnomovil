@@ -103,6 +103,12 @@ export class ProductosComponent implements OnInit {
     this.loadData();
   }
 
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.filterCategoria = 0;
+    this.applyFilter();
+  }
+
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadData();

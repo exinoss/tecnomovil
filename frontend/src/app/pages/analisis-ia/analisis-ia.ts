@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AnalisisIAService } from '../../core/services/analisis-ia.service';
 import { AnalisisIAResponseDTO, AnalisisIAResumenDTO, DetalleAnalisisIAResponseDTO } from '../../core/models/analisis-ia';
-import { ToastService } from '../../shared/components/toast/toast.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-analisis-ia',
@@ -9,7 +9,7 @@ import { ToastService } from '../../shared/components/toast/toast.service';
   templateUrl: './analisis-ia.html',
   styleUrls: ['./analisis-ia.css']
 })
-export class AnalisisIa implements OnInit {
+export class AnalisisIa implements OnInit, OnDestroy {
   historial: AnalisisIAResumenDTO[] = [];
   analisisSeleccionado: AnalisisIAResponseDTO | null = null;
   loading = false;
@@ -75,13 +75,31 @@ export class AnalisisIa implements OnInit {
     'Baja': 10
   };
 
+  private subs: Subscription = new Subscription();
+
   constructor(
-    private analisisService: AnalisisIAService,
-    private toastService: ToastService
+    private analisisService: AnalisisIAService
   ) {}
 
   ngOnInit(): void {
     this.cargarHistorial();
+
+    this.subs.add(
+      this.analisisService.generando$.subscribe(estado => {
+        this.generando = estado;
+      })
+    );
+
+    this.subs.add(
+      this.analisisService.nuevoAnalisis$.subscribe(id => {
+        this.cargarHistorial();
+        this.verDetalle(id);
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   cargarHistorial(): void {
@@ -102,20 +120,7 @@ export class AnalisisIa implements OnInit {
   }
 
   generarNuevoAnalisis(): void {
-    this.generando = true;
-    this.analisisService.generarAnalisis().subscribe({
-      next: (response) => {
-        this.toastService.show('Análisis generado exitosamente', 'success');
-        this.generando = false;
-        this.cargarHistorial();
-        this.verDetalle(response.idAnalisis);
-      },
-      error: (error) => {
-        console.error('Error generando análisis', error);
-        this.toastService.show('Error al generar el análisis: ' + error.message, 'error');
-        this.generando = false;
-      }
-    });
+    this.analisisService.generarAnalisisBackground();
   }
 
   verDetalle(id: number): void {

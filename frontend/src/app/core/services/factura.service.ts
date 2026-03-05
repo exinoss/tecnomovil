@@ -10,13 +10,19 @@ export class FacturaService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(page: number, pageSize: number, search?: string): Observable<FacturaPagedResponse> {
+  getAll(page: number, pageSize: number, search?: string, desde?: string, hasta?: string): Observable<FacturaPagedResponse> {
     let params = new HttpParams()
       .set('page', page)
       .set('pageSize', pageSize);
 
     if (search && search.trim().length > 0) {
       params = params.set('search', search.trim());
+    }
+    if (desde) {
+      params = params.set('desde', desde);
+    }
+    if (hasta) {
+      params = params.set('hasta', hasta);
     }
 
     return this.http.get<FacturaPagedResponse>(this.apiUrl, { params });

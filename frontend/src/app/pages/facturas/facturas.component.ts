@@ -16,11 +16,11 @@ import { Reparacion } from '../../core/models/reparacion.model';
 interface ItemFactura {
   tipoItem: string;
   idProducto?: number;
-
   idReparacion?: number;
   descripcionItem: string;
   cantidad: number;
-  precioUnitario: number;
+  precioUnitario: number; 
+  costoManoObra?: number; 
   subtotal: number;
 }
 
@@ -32,6 +32,8 @@ interface ItemFactura {
 export class FacturasComponent implements OnInit {
   facturas: FacturaListItem[] = [];
   searchTerm = '';
+  fechaDesde = '';
+  fechaHasta = '';
   loading = true;
   totalItems = 0;
 
@@ -56,7 +58,9 @@ export class FacturasComponent implements OnInit {
   selectedReparacion: number = 0;
   itemDescripcion = '';
   itemCantidad = 1;
-  itemPrecio = 0;
+  itemPrecio = 0;         
+  costoRepuestos = 0;      
+  cargandoRepuestos = false;
 
   // Detalle factura
   showDetalle = false;
@@ -81,7 +85,7 @@ export class FacturasComponent implements OnInit {
 
   loadFacturas(): void {
     this.loading = true;
-    this.facturaService.getAll(this.currentPage, this.pageSize, this.searchTerm).subscribe({
+    this.facturaService.getAll(this.currentPage, this.pageSize, this.searchTerm, this.fechaDesde, this.fechaHasta).subscribe({
       next: (data) => {
         this.facturas = data.items;
         this.totalItems = data.totalItems;
@@ -100,6 +104,13 @@ export class FacturasComponent implements OnInit {
   applyFilter(): void {
     this.currentPage = 1;
     this.loadFacturas();
+  }
+
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.applyFilter();
   }
 
   onPageChange(page: number): void {
@@ -134,14 +145,22 @@ export class FacturasComponent implements OnInit {
     this.itemDescripcion = '';
     this.itemCantidad = 1;
     this.itemPrecio = 0;
+    this.costoRepuestos = 0;
+    this.cargandoRepuestos = false;
   }
 
-  onTipoItemChange(): void {
+  openTipoItemChange(): void {
     this.selectedProducto = 0;
     this.selectedReparacion = 0;
     this.itemDescripcion = '';
     this.itemPrecio = 0;
     this.itemCantidad = 1;
+    this.costoRepuestos = 0;
+    this.cargandoRepuestos = false;
+  }
+
+  onTipoItemChange(): void {
+    this.openTipoItemChange();
   }
 
   onProductoSelect(): void {
@@ -158,6 +177,19 @@ export class FacturasComponent implements OnInit {
       this.itemDescripcion = `Reparación #${rep.idReparacion} - ${rep.modeloEquipo}`;
       this.itemPrecio = rep.costoManoObra || 0;
       this.itemCantidad = 1;
+      this.costoRepuestos = 0;
+      this.cargandoRepuestos = true;
+      // Cargar repuestos de la reparación para calcular el total de repuestos
+      this.reparacionService.getRepuestos(rep.idReparacion).subscribe({
+        next: (repuestos) => {
+          this.costoRepuestos = repuestos.reduce((sum, r) => {
+            const precio = r.precioCobrado ?? r.costoUnitario ?? 0;
+            return sum + precio * r.cantidad;
+          }, 0);
+          this.cargandoRepuestos = false;
+        },
+        error: () => { this.cargandoRepuestos = false; }
+      });
     }
   }
 
@@ -190,18 +222,24 @@ export class FacturasComponent implements OnInit {
       }
     }
 
+    // Para Reparacion: el precio guardado = mano de obra + total repuestos
+    const precioFinal = this.tipoItem === 'Reparacion'
+      ? this.itemPrecio + this.costoRepuestos
+      : this.itemPrecio;
+
     const item: ItemFactura = {
       tipoItem: this.tipoItem,
       descripcionItem: this.itemDescripcion,
       cantidad: this.itemCantidad,
-      precioUnitario: this.itemPrecio,
-      subtotal: this.itemCantidad * this.itemPrecio
+      precioUnitario: precioFinal,
+      subtotal: this.itemCantidad * precioFinal
     };
     if (this.tipoItem === 'Producto' && this.selectedProducto) {
       item.idProducto = this.selectedProducto;
     }
     if (this.tipoItem === 'Reparacion' && this.selectedReparacion) {
       item.idReparacion = this.selectedReparacion;
+      item.costoManoObra = this.itemPrecio; 
     }
     this.items.push(item);
     this.showAddItem = false;
@@ -238,12 +276,12 @@ export class FacturasComponent implements OnInit {
       idCliente: this.selectedCliente,
       detalles: this.items.map(i => ({
         idProducto: i.idProducto || undefined,
-
         idReparacion: i.idReparacion || undefined,
         descripcionItem: i.descripcionItem,
         cantidad: i.cantidad,
         precioUnitario: i.precioUnitario,
-        tipoItem: i.tipoItem
+        tipoItem: i.tipoItem,
+        costoManoObra: i.costoManoObra ?? undefined  // solo Reparacion, undefined para el resto
       })),
       reparacionIds: reparacionIds.length > 0 ? reparacionIds : undefined
     };

@@ -33,6 +33,8 @@ public class DetalleFacturaDto
 
     [Required(ErrorMessage = "El tipo de item es requerido")]
     public string TipoItem { get; set; } = "Venta Directa";
+
+    public decimal? CostoManoObra { get; set; }
 }
 
 public class FacturaResponseDto
