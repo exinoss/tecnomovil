@@ -40,6 +40,7 @@ public class FacturaResponseDto
     public int IdFactura { get; set; }
     public DateTime Fecha { get; set; }
     public string ClienteNombre { get; set; } = string.Empty;
+    public string ClienteEmail { get; set; } = string.Empty;
     public string VendedorNombre { get; set; } = string.Empty;
     public decimal IvaPorcentaje { get; set; }
     public decimal Subtotal { get; set; }

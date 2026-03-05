@@ -9,7 +9,23 @@ export class PdfService {
     const pdfFonts = (await import('pdfmake/build/vfs_fonts')).default;
     (pdfMake as any).vfs = (pdfFonts as any)['vfs'];
 
-    const docDefinition: any = {
+    const docDefinition: any = this.obtenerDefinicionBase(factura);
+    pdfMake.createPdf(docDefinition).open();
+  }
+
+  async obtenerFacturaBase64(factura: FacturaResponse): Promise<string> {
+    const pdfMake = (await import('pdfmake/build/pdfmake')).default;
+    const pdfFonts = (await import('pdfmake/build/vfs_fonts')).default;
+    (pdfMake as any).vfs = (pdfFonts as any)['vfs'];
+
+    const docDefinition: any = this.obtenerDefinicionBase(factura);
+
+    const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+    return await (pdfDocGenerator as any).getBase64();
+  }
+
+  private obtenerDefinicionBase(factura: FacturaResponse): any {
+    return {
       content: [
         // Encabezado
         {
@@ -66,7 +82,7 @@ export class PdfService {
                 { text: 'P. Unit.', style: 'tableHeader', alignment: 'right' },
                 { text: 'Subtotal', style: 'tableHeader', alignment: 'right' }
               ],
-              ...factura.detalles.map(d => [
+              ...factura.detalles.map((d: any) => [
                 { text: d.descripcionItem || '-', style: 'tableCell' },
                 { text: d.tipoItem, style: 'tableCell', alignment: 'center' },
                 { text: d.cantidad.toString(), style: 'tableCell', alignment: 'center' },
@@ -119,6 +135,5 @@ export class PdfService {
       pageMargins: [40, 40, 40, 60]
     };
 
-    pdfMake.createPdf(docDefinition).download(`factura-${factura.idFactura}.pdf`);
   }
 }

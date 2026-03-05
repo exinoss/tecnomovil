@@ -15,6 +15,58 @@ export class AnalisisIa implements OnInit {
   loading = false;
   loadingDetalle = false;
   generando = false;
+  sidebarAbierto = true;
+
+  // Filtro de fecha para el historial
+  filtroDesde = '';
+  filtroHasta = '';
+
+  get historialFiltrado() {
+    return this.historial.filter(h => {
+      const fecha = new Date(h.fechaGeneracion);
+      if (this.filtroDesde && fecha < new Date(this.filtroDesde)) return false;
+      if (this.filtroHasta) {
+        const hasta = new Date(this.filtroHasta);
+        hasta.setHours(23, 59, 59, 999);
+        if (fecha > hasta) return false;
+      }
+      return true;
+    });
+  }
+
+  limpiarFiltroFecha() {
+    this.filtroDesde = '';
+    this.filtroHasta = '';
+  }
+
+  // Acordeón unificado por clave de prioridad
+  acordeon: { [key: string]: boolean } = {
+    Alta: true,
+    Media: true,
+    Baja: true
+  };
+
+  // Configuración de prioridades para el *ngFor del HTML
+  prioridades = [
+    {
+      key: 'Alta',
+      label: 'Prioridad Alta',
+      dotClass: 'bg-red-500',
+      badgeClass: 'bg-red-100 text-red-700 border-red-200'
+    },
+    {
+      key: 'Media',
+      label: 'Prioridad Media',
+      dotClass: 'bg-yellow-500',
+      badgeClass: 'bg-yellow-100 text-yellow-700 border-yellow-200'
+    },
+    {
+      key: 'Baja',
+      label: 'Prioridad Baja',
+      dotClass: 'bg-green-500',
+      badgeClass: 'bg-gray-200 text-gray-700 border-gray-300'
+    }
+  ];
 
   searchTerm: string = '';
   limitePorUrgencia: { [key: string]: number } = {
@@ -106,5 +158,9 @@ export class AnalisisIa implements OnInit {
 
   cargarMas(urgencia: string) {
     this.limitePorUrgencia[urgencia] += 10;
+  }
+
+  toggleSidebar() {
+    this.sidebarAbierto = !this.sidebarAbierto;
   }
 }

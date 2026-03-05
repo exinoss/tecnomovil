@@ -9,7 +9,7 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize] // Cualquier usuario autenticado puede acceder (los endpoints sensibles tienen su propio [Authorize(Roles)])
 public class UsuariosController : ControllerBase
 {
     private readonly TecnoMovilDbContext _context;
@@ -20,6 +20,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<object>>> GetAll()
     {
         return await _context.Usuarios
@@ -37,6 +38,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet("activos")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<object>>> GetActivos()
     {
         return await _context.Usuarios
@@ -54,7 +56,9 @@ public class UsuariosController : ControllerBase
             .ToListAsync();
     }
 
+    // Accesible por Admin, Vendedor y Tecnico (necesario para el select de reparaciones)
     [HttpGet("tecnicos")]
+    [Authorize(Roles = "Admin,Vendedor,Tecnico")]
     public async Task<ActionResult<IEnumerable<object>>> GetTecnicos()
     {
         return await _context.Usuarios
@@ -69,6 +73,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<object>> GetById(int id)
     {
         var usuario = await _context.Usuarios
@@ -92,6 +97,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<object>> Create([FromBody] UsuarioDto dto)
     {
         if (string.IsNullOrEmpty(dto.Password))
@@ -137,6 +143,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UsuarioDto dto)
     {
         var usuario = await _context.Usuarios.FindAsync(id);
@@ -184,6 +191,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var usuario = await _context.Usuarios.FindAsync(id);
@@ -197,6 +205,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPut("{id}/cambiar-password")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CambiarPassword(int id, [FromBody] CambiarPasswordDto dto)
     {
         var usuario = await _context.Usuarios.FindAsync(id);

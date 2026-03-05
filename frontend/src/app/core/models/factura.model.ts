@@ -16,6 +16,7 @@ export interface FacturaResponse {
   idFactura: number;
   fecha: string;
   clienteNombre: string;
+  clienteEmail?: string;
   vendedorNombre: string;
   ivaPorcentaje: number;
   subtotal: number;

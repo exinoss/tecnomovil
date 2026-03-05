@@ -385,6 +385,39 @@ export class ProductosComponent implements OnInit {
     });
   }
 
+  habilitarSerial(serial: ProductoSerial): void {
+    this.productoService.updateSerial(serial.idSerial, {
+      numeroSerieImei: serial.numeroSerieImei,
+      estado: 'Disponible'
+    }).subscribe({
+      next: () => {
+        this.toast.show('Serial habilitado', 'success');
+        const idProd = this.showSeriales
+          ? this.productoSerialActual!.idProducto
+          : this.selectedId!;
+        this.showSeriales ? this.loadSerialesExterno(idProd) : this.loadSeriales(idProd);
+        this.loadData();
+      },
+      error: () => this.toast.show('Error al habilitar serial', 'error')
+    });
+  }
+
+  eliminarSerial(serial: ProductoSerial): void {
+    if (!confirm(`¿Eliminar permanentemente el serial ${serial.numeroSerieImei}?`)) return;
+    this.productoService.deleteSerial(serial.idSerial).subscribe({
+      next: () => {
+        this.toast.show('Serial eliminado', 'success');
+        const idProd = this.showSeriales
+          ? this.productoSerialActual!.idProducto
+          : this.selectedId!;
+        this.showSeriales ? this.loadSerialesExterno(idProd) : this.loadSeriales(idProd);
+        this.loadData();
+      },
+      error: () => this.toast.show('Error al eliminar serial', 'error')
+    });
+  }
+
+
   getEstadoSerialClass(estado: string): string {
     switch (estado) {
       case 'Disponible': return 'bg-green-100 text-green-700';

@@ -81,6 +81,9 @@ builder.Services.AddHttpClient("GeminiClient", client =>
 // Servicio de análisis IA
 builder.Services.AddScoped<AnalisisIAService>();
 
+// Servicio de email (SMTP)
+builder.Services.AddSingleton<EmailService>();
+
 // Swagger con soporte JWT
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -188,11 +191,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseStaticFiles(); // Servir archivos estáticos (uploads)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Redirigir la raíz → Swagger UI
+app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
+   .ExcludeFromDescription(); 
+
 app.MapControllers();
 
 app.Run();

@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
             return Ok(new LoginResponseDto
             {
                 Success = false,
-                Message = "Contraseña incorrecta"
+                Message = "Usuario o contraseña incorrecta"
             });
         }
 

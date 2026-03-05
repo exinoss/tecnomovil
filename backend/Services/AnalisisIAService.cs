@@ -153,7 +153,7 @@ Estructura de cada objeto:
         var requestBody = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
-            generationConfig = new { temperature = 0.2, maxOutputTokens = 16384 }
+            generationConfig = new { temperature = 0.2, maxOutputTokens = 20000 }
         };
 
         var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");

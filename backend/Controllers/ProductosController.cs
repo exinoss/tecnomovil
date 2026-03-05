@@ -260,6 +260,18 @@ public class ProductosController : ControllerBase
         return Ok(serial);
     }
 
+    [HttpDelete("seriales/{idSerial}")]
+    public async Task<IActionResult> DeleteSerial(int idSerial)
+    {
+        var serial = await _context.ProductoSeriales.FindAsync(idSerial);
+        if (serial == null)
+            return NotFound(new { message = "Serial no encontrado" });
+
+        _context.ProductoSeriales.Remove(serial);
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Serial eliminado" });
+    }
+
     // ========== UPLOAD IMAGEN ==========
     [HttpPost("upload-imagen")]
     public async Task<IActionResult> UploadImagen(IFormFile archivo)

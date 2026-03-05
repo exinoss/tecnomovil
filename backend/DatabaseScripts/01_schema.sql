@@ -227,7 +227,7 @@ CREATE TABLE dbo.Detalle_Factura (
     precio_unitario DECIMAL(18,2) NOT NULL CHECK (precio_unitario >= 0),
 
     tipo_item VARCHAR(30) NOT NULL
-      CHECK (tipo_item IN ('Venta Directa','Repuesto','Servicio')),
+      CHECK (tipo_item IN ('Venta Directa','Repuesto','Servicio','Producto','Reparacion')),
 
     CONSTRAINT FK_DF_Factura
       FOREIGN KEY (id_factura) REFERENCES dbo.Factura(id_factura),

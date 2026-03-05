@@ -75,6 +75,10 @@ export class ProductoService {
     return this.http.put<ProductoSerial>(`${this.apiUrl}/seriales/${idSerial}`, dto);
   }
 
+  deleteSerial(idSerial: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/seriales/${idSerial}`);
+  }
+
   // Imagen
   uploadImagen(id: number, file: File): Observable<any> {
     const formData = new FormData();

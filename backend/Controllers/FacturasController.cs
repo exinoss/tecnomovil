@@ -95,6 +95,7 @@ public class FacturasController : ControllerBase
             IdFactura = factura.IdFactura,
             Fecha = factura.Fecha,
             ClienteNombre = factura.Cliente?.Nombres ?? "",
+            ClienteEmail = factura.Cliente?.Email ?? "",
             VendedorNombre = factura.Vendedor?.Nombres ?? "",
             IvaPorcentaje = factura.IvaPorcentaje,
             Subtotal = factura.Subtotal,
@@ -144,6 +145,20 @@ public class FacturasController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         var idUsuario = dto.IdUsuario ?? int.Parse(userIdClaim?.Value ?? "0");
 
+        // Validar stock antes de crear — aplica a 'Producto' (facturas) y 'Venta Directa' (inventario)
+        foreach (var detalleDto in dto.Detalles)
+        {
+            var esProducto = detalleDto.TipoItem == "Producto" || detalleDto.TipoItem == "Venta Directa";
+            if (esProducto && detalleDto.IdProducto.HasValue)
+            {
+                var producto = await _context.Productos.FindAsync(detalleDto.IdProducto.Value);
+                if (producto == null)
+                    return BadRequest(new { message = $"Producto con ID {detalleDto.IdProducto} no encontrado." });
+                if (producto.StockActual < detalleDto.Cantidad)
+                    return BadRequest(new { message = $"Stock insuficiente para '{producto.NombreProducto}'. Disponible: {producto.StockActual}, solicitado: {detalleDto.Cantidad}." });
+            }
+        }
+
         var factura = new Factura
         {
             IdCliente = dto.IdCliente,
@@ -154,14 +169,14 @@ public class FacturasController : ControllerBase
         _context.Facturas.Add(factura);
         await _context.SaveChangesAsync();
 
-        // Agregar detalles
+        // Agregar detalles — el trigger trg_DetalleFactura_AfterInsert + trg_MI_AfterInsert
+        // reducen el stock automáticamente para tipo_item = 'Venta Directa'
         foreach (var detalleDto in dto.Detalles)
         {
             var detalle = new DetalleFactura
             {
                 IdFactura = factura.IdFactura,
                 IdProducto = detalleDto.IdProducto,
-
                 IdReparacion = detalleDto.IdReparacion,
                 DescripcionItem = detalleDto.DescripcionItem,
                 Cantidad = detalleDto.Cantidad,

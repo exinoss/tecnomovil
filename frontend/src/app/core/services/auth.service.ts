@@ -52,6 +52,16 @@ export class AuthService {
     return roles.includes(this.getRol());
   }
 
+  getHomeRoute(): string {
+    const rol = this.getRol();
+    if (rol === 'Admin' || rol === 'Vendedor' || rol === 'Tecnico') return '/dashboard';
+    // Rol desconocido: forzar logout
+    this.logout();
+
+
+    return '/auth';
+  }
+
   private getStoredUser(): UsuarioInfo | null {
     const stored = localStorage.getItem('usuario');
     return stored ? JSON.parse(stored) : null;

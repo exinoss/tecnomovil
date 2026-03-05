@@ -8,6 +8,7 @@ import { ReparacionService } from '../../core/services/reparacion.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { PdfService } from '../../core/services/pdf.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { EmailService } from '../../core/services/email.service';
 import { Cliente } from '../../core/models/cliente.model';
 import { Producto } from '../../core/models/producto.model';
 import { Reparacion } from '../../core/models/reparacion.model';
@@ -60,6 +61,7 @@ export class FacturasComponent implements OnInit {
   // Detalle factura
   showDetalle = false;
   facturaDetalle: FacturaResponse | null = null;
+  enviandoCorreo = false;
 
   constructor(
     private facturaService: FacturaService,
@@ -69,7 +71,8 @@ export class FacturasComponent implements OnInit {
     private configuracionService: ConfiguracionService,
     private pdfService: PdfService,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    private emailService: EmailService
   ) {}
 
   ngOnInit(): void {
@@ -163,6 +166,30 @@ export class FacturasComponent implements OnInit {
       this.toast.show('Complete los datos del item', 'error');
       return;
     }
+
+    // Validar duplicados
+    if (this.tipoItem === 'Producto' && this.selectedProducto) {
+      const yaExiste = this.items.some(i => i.idProducto === this.selectedProducto);
+      if (yaExiste) {
+        this.toast.show('Este producto ya fue añadido a la factura', 'warning');
+        return;
+      }
+      // Validar stock
+      const prod = this.productos.find(p => p.idProducto == this.selectedProducto);
+      if (prod && this.itemCantidad > prod.stockActual) {
+        this.toast.show(`Stock insuficiente. Disponible: ${prod.stockActual}`, 'error');
+        return;
+      }
+    }
+
+    if (this.tipoItem === 'Reparacion' && this.selectedReparacion) {
+      const yaExiste = this.items.some(i => i.idReparacion === this.selectedReparacion);
+      if (yaExiste) {
+        this.toast.show('Esta reparación ya fue añadida a la factura', 'warning');
+        return;
+      }
+    }
+
     const item: ItemFactura = {
       tipoItem: this.tipoItem,
       descripcionItem: this.itemDescripcion,
@@ -179,6 +206,7 @@ export class FacturasComponent implements OnInit {
     this.items.push(item);
     this.showAddItem = false;
   }
+
 
   removeItem(index: number): void {
     this.items.splice(index, 1);
@@ -253,5 +281,46 @@ export class FacturasComponent implements OnInit {
 
   generarPDF(factura: FacturaResponse): void {
     this.pdfService.generarFacturaPDF(factura);
+  }
+
+  async enviarFacturaCorreo(factura: FacturaResponse): Promise<void> {
+    if (!factura.clienteEmail) {
+      this.toast.show('El cliente no tiene un correo registrado', 'warning');
+      return;
+    }
+
+    this.enviandoCorreo = true;
+    try {
+      const pdfBase64 = await this.pdfService.obtenerFacturaBase64(factura);
+
+      this.emailService.enviar({
+        destinatario: factura.clienteEmail,
+        nombreDestinatario: factura.clienteNombre,
+        asunto: `Factura #${factura.idFactura} -  Tecnomovil`,
+        cuerpo: `<h2 style="color:#1d4ed8">Hola, ${factura.clienteNombre}</h2>
+                 <p>Adjunto a este correo encontrarás tu factura <strong>#${factura.idFactura}</strong>.</p>
+                 <p>Gracias por preferir a <strong>Tecnomovil</strong>.</p>`,
+        esTextoPlano: false,
+        adjuntos: [
+          {
+            nombre: `factura-${factura.idFactura}.pdf`,
+            base64: pdfBase64,
+            contentType: 'application/pdf'
+          }
+        ]
+      }).subscribe({
+        next: () => {
+          this.toast.show('Factura enviada al correo del cliente', 'success');
+          this.enviandoCorreo = false;
+        },
+        error: () => {
+          this.toast.show('Error al enviar el correo', 'error');
+          this.enviandoCorreo = false;
+        }
+      });
+    } catch (e) {
+      this.toast.show('Error al generar el PDF adjunto', 'error');
+      this.enviandoCorreo = false;
+    }
   }
 }

@@ -47,7 +47,9 @@ BEGIN
 END;
 GO
 
-/* C) Detalle_Factura -> Movimiento_Inventario (solo Venta Directa) */
+/* C) Detalle_Factura -> Movimiento_Inventario
+      - 'Venta Directa': venta desde el módulo de inventario
+      - 'Producto':       producto vendido desde el módulo de facturas */
 CREATE OR ALTER TRIGGER dbo.trg_DetalleFactura_AfterInsert
 ON dbo.Detalle_Factura
 AFTER INSERT
@@ -56,17 +58,18 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.Movimiento_Inventario
-        (id_producto, tipo, cantidad, referencia_tabla, referencia_id, detalle)
+        (id_producto, tipo, cantidad, fecha, referencia_tabla, referencia_id, detalle)
     SELECT
         i.id_producto,
         'Venta',
         -i.cantidad,
+        GETDATE(),
         'Factura',
         i.id_factura,
         CONCAT('Detalle_Factura id_detalle=', i.id_detalle)
     FROM inserted i
-    WHERE i.tipo_item = 'Venta Directa'
-      AND i.id_producto IS NOT NULL;
+    WHERE i.id_producto IS NOT NULL
+      AND i.tipo_item IN ('Venta Directa', 'Producto');
 END;
 GO
 

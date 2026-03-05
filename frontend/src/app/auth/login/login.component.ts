@@ -20,7 +20,7 @@ export class LoginComponent {
     private toast: ToastService
   ) {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/']);
+      this.router.navigate([this.authService.getHomeRoute()]);
     }
   }
 
@@ -41,7 +41,7 @@ export class LoginComponent {
           this.loading = false;
           if (res.success) {
             this.toast.show('Bienvenido ' + res.usuario?.nombres, 'success');
-            this.router.navigate(['/']);
+            this.router.navigate([this.authService.getHomeRoute()]);
           } else {
             this.toast.show(res.message, 'error');
           }
