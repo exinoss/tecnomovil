@@ -1,3 +1,12 @@
+/*
+ * Solo el core.css de Ionic: define las variables CSS y el reset interno
+ * que usan los web components (ion-app, ion-content, ion-router-outlet).
+ * Esos componentes son Shadow DOM, así que no dependen de normalize/structure/
+ * typography.css — esas hojas SÍ se salen del Shadow DOM y reescriben etiquetas
+ * nativas (button, input, a, h1...) pisando los estilos Tailwind existentes.
+ */
+@import "@ionic/angular/css/core.css";
+
 @import "tailwindcss";
 
 @theme {

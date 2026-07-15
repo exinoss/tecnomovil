@@ -2,7 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { LoginDto, LoginResponse, UsuarioInfo } from '../models/auth.model';
+import {
+  LoginDto,
+  LoginResponse,
+  UsuarioInfo,
+  AuthResponse,
+  SolicitarCodigoDto,
+  VerificarCodigoDto,
+  ResetearContraseniaDto
+} from '../models/auth.model';
 import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
@@ -23,6 +31,18 @@ export class AuthService {
         }
       })
     );
+  }
+
+  solicitarCodigo(correo: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/solicitar-codigo`, { correo } as SolicitarCodigoDto);
+  }
+
+  verificarCodigo(correo: string, codigo: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/verificar-codigo`, { correo, codigo } as VerificarCodigoDto);
+  }
+
+  resetearContrasenia(dto: ResetearContraseniaDto): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/resetear-contrasenia`, dto);
   }
 
   logout(): void {

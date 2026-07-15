@@ -33,6 +33,14 @@ ADMIN_CORREO=admin@tecnomovil.com
 ADMIN_IDENTIFICACION=
 ADMIN_PASSWORD=
 
+GEMINI_API_KEY = key
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+SMTP_FROM_NAME=
 
 ```
 
@@ -106,7 +114,7 @@ Puedes verificar que funciona abriendo `https://localhost:7045/swagger` en el na
 
 ## Paso 6 — Configurar la URL del backend en el frontend
 
-Si el backend corre en un puerto diferente a `7045`, actualiza el archivo:
+Si el backend corre en un puerto diferente a `5000` o necesitas acceder desde otros dispositivos en la red, actualiza el archivo:
 
 ```
 frontend/src/app/environments/environment.ts
@@ -115,7 +123,7 @@ frontend/src/app/environments/environment.ts
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7045/api'  // ← cambia el puerto aquí si es diferente
+  apiUrl: 'http://192.168.1.100:5000/api'  // ← cambia la IP y puerto según tu entorno
 };
 ```
 

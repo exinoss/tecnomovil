@@ -2,6 +2,7 @@ import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { IonicModule } from '@ionic/angular';
 
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
@@ -14,6 +15,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
   ],
   imports: [
     BrowserModule,
+    IonicModule.forRoot(),
     AppRoutingModule,
     SharedModule
   ],

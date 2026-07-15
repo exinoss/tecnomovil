@@ -8,6 +8,7 @@
     <PackageJsonScriptsBuild Condition="$(PackageJsonScriptsBuild) == ''">ng build</PackageJsonScriptsBuild>
     <PackageJsonScriptsWatch Condition="$(PackageJsonScriptsWatch) == ''">ng build --watch --configuration development</PackageJsonScriptsWatch>
     <PackageJsonScriptsTest Condition="$(PackageJsonScriptsTest) == ''">ng test</PackageJsonScriptsTest>
+    <PackageJsonScriptsRunAndroid Condition="$(PackageJsonScriptsRunAndroid) == ''">ng build &amp;&amp; cap copy android &amp;&amp; cd android &amp;&amp; .\gradlew installDebug</PackageJsonScriptsRunAndroid>
     <PackageJsonPrettierPrintwidth Condition="$(PackageJsonPrettierPrintwidth) == ''">100</PackageJsonPrettierPrintwidth>
     <PackageJsonPrettierSinglequote Condition="$(PackageJsonPrettierSinglequote) == ''">true</PackageJsonPrettierSinglequote>
     <PackageJsonPrettierOverrides Condition="$(PackageJsonPrettierOverrides) == ''">[
@@ -26,6 +27,9 @@
     <PackageJsonDependenciesAngularForms Condition="$(PackageJsonDependenciesAngularForms) == ''">^20.2.0</PackageJsonDependenciesAngularForms>
     <PackageJsonDependenciesAngularPlatformBrowser Condition="$(PackageJsonDependenciesAngularPlatformBrowser) == ''">^20.2.0</PackageJsonDependenciesAngularPlatformBrowser>
     <PackageJsonDependenciesAngularRouter Condition="$(PackageJsonDependenciesAngularRouter) == ''">^20.2.0</PackageJsonDependenciesAngularRouter>
+    <PackageJsonDependenciesCapacitorAndroid Condition="$(PackageJsonDependenciesCapacitorAndroid) == ''">^8.4.1</PackageJsonDependenciesCapacitorAndroid>
+    <PackageJsonDependenciesCapacitorCore Condition="$(PackageJsonDependenciesCapacitorCore) == ''">^8.4.1</PackageJsonDependenciesCapacitorCore>
+    <PackageJsonDependenciesIonicAngular Condition="$(PackageJsonDependenciesIonicAngular) == ''">^8.8.13</PackageJsonDependenciesIonicAngular>
     <PackageJsonDependenciesTailwindcssPostcss Condition="$(PackageJsonDependenciesTailwindcssPostcss) == ''">^4.1.18</PackageJsonDependenciesTailwindcssPostcss>
     <PackageJsonDependenciesTypesPdfmake Condition="$(PackageJsonDependenciesTypesPdfmake) == ''">^0.3.2</PackageJsonDependenciesTypesPdfmake>
     <PackageJsonDependenciesChartJs Condition="$(PackageJsonDependenciesChartJs) == ''">^4.5.1</PackageJsonDependenciesChartJs>
@@ -40,6 +44,7 @@
     <PackageJsonDevdependenciesAngularBuild Condition="$(PackageJsonDevdependenciesAngularBuild) == ''">^20.2.1</PackageJsonDevdependenciesAngularBuild>
     <PackageJsonDevdependenciesAngularCli Condition="$(PackageJsonDevdependenciesAngularCli) == ''">^20.2.1</PackageJsonDevdependenciesAngularCli>
     <PackageJsonDevdependenciesAngularCompilerCli Condition="$(PackageJsonDevdependenciesAngularCompilerCli) == ''">^20.2.0</PackageJsonDevdependenciesAngularCompilerCli>
+    <PackageJsonDevdependenciesCapacitorCli Condition="$(PackageJsonDevdependenciesCapacitorCli) == ''">^8.4.1</PackageJsonDevdependenciesCapacitorCli>
     <PackageJsonDevdependenciesTypesJasmine Condition="$(PackageJsonDevdependenciesTypesJasmine) == ''">~5.1.0</PackageJsonDevdependenciesTypesJasmine>
     <PackageJsonDevdependenciesJasmineCore Condition="$(PackageJsonDevdependenciesJasmineCore) == ''">~5.9.0</PackageJsonDevdependenciesJasmineCore>
     <PackageJsonDevdependenciesKarma Condition="$(PackageJsonDevdependenciesKarma) == ''">~6.4.0</PackageJsonDevdependenciesKarma>

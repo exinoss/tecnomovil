@@ -167,6 +167,49 @@ namespace backend.Migrations
                     b.ToTable("Cliente");
                 });
 
+            modelBuilder.Entity("backend.Models.CodigoRecuperacion", b =>
+                {
+                    b.Property<int>("IdCodigo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_codigo");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCodigo"));
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)")
+                        .HasColumnName("codigo");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("fecha_creacion");
+
+                    b.Property<DateTime>("FechaExpiracion")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("fecha_expiracion");
+
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("int")
+                        .HasColumnName("intentos");
+
+                    b.Property<bool>("Usado")
+                        .HasColumnType("bit")
+                        .HasColumnName("usado");
+
+                    b.HasKey("IdCodigo");
+
+                    b.HasIndex("IdUsuario", "FechaCreacion")
+                        .HasDatabaseName("IX_CodigoRecuperacion_usuario_fecha");
+
+                    b.ToTable("CodigoRecuperacion");
+                });
+
             modelBuilder.Entity("backend.Models.Configuracion", b =>
                 {
                     b.Property<int>("IdConfig")
@@ -736,6 +779,17 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("Usuario");
+                });
+
+            modelBuilder.Entity("backend.Models.CodigoRecuperacion", b =>
+                {
+                    b.HasOne("backend.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("backend.Models.DetalleAnalisisIA", b =>

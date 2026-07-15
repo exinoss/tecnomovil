@@ -1,59 +1,128 @@
-# Frontend
+# Frontend — TecnoMovil
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.1.
+SPA de gestión para TecnoMovil construida con **Angular 20** + **Tailwind CSS 4** + **Ionic** + **Capacitor**.
 
-## Development server
+---
 
-To start a local development server, run:
+## Stack
 
-```bash
-ng serve
-```
+- **Angular 20** (módulos, no standalone)
+- **Tailwind CSS 4** (estilos)
+- **Ionic Angular 8** (componentes UI móvil)
+- **Capacitor 8** (empaquetado nativo Android)
+- **Chart.js + ng2-charts** (gráficos del dashboard)
+- **pdfmake** (generación de facturas en PDF)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## Requisitos previos
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- [Node.js 20+](https://nodejs.org/)
+- [pnpm](https://pnpm.io/) (gestor usado en el proyecto)
 
-```bash
-ng generate component component-name
-```
+---
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Instalación
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Desde la carpeta `frontend/`:
 
 ```bash
-ng build
+pnpm install
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## Scripts disponibles
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+| Script | Comando | Descripción |
+|--------|---------|-------------|
+| `start` | `ng serve --host=127.0.0.1` | Servidor de desarrollo en `http://localhost:4200/` |
+| `build` | `ng build` | Build de producción en `dist/frontend/browser/` |
+| `watch` | `ng build --watch --configuration development` | Build incremental en modo desarrollo |
+| `test` | `ng test` | Tests unitarios con Karma + Jasmine |
+| `run:android:dev` | `ng build --configuration development` + `cap copy` + `gradlew installDebug` | Compila e instala la app en Android (backend LAN) |
+| `run:android:pro` | `ng build` + `cap copy` + `gradlew installDebug` | Compila e instala la app en Android (backend nube) |
+
+Uso:
 
 ```bash
-ng test
+pnpm start      # desarrollo web
+pnpm build      # build de producción
+pnpm test       # tests
 ```
 
-## Running end-to-end tests
+> Los scripts `run:android:*` están documentados en [`ANDROID.md`](./ANDROID.md).
 
-For end-to-end (e2e) testing, run:
+---
+
+## Configuración de entorno
+
+La URL del backend se define en `src/app/environments/`:
+
+| Archivo | Uso | `apiUrl` |
+|---------|-----|----------|
+| `environment.ts` | Desarrollo | `http://192.168.000.000:5000/api` (IP local + puerto del backend) |
+| `environment.prod.ts` | Producción | `https://tecnomovil-backend.onrender.com/api` |
+
+> Cambia la IP/puerto según tu red local cuando desarrolles.
+
+---
+
+## Estructura
+
+```
+frontend/
+├── src/app/
+│   ├── auth/              # login + recuperación de contraseña
+│   ├── core/              # modelos, servicios y guards
+│   ├── environments/      # environment.ts / environment.prod.ts
+│   ├── layout/            # shell (sidebar + topbar)
+│   ├── pages/             # módulos de cada feature
+│   │   ├── analisis-ia/
+│   │   ├── atributos/
+│   │   ├── categorias/
+│   │   ├── clientes/
+│   │   ├── configuracion/
+│   │   ├── dashboard/
+│   │   ├── facturas/
+│   │   ├── inventario/
+│   │   ├── productos/
+│   │   ├── reparaciones/
+│   │   └── usuarios/
+│   └── shared/            # componentes reutilizables
+├── android/               # proyecto nativo Capacitor (generado)
+├── capacitor.config.ts    # config de Capacitor (appId, webDir)
+└── angular.json
+```
+
+---
+
+## Scaffolding
+
+Para generar nuevos componentes/servicios:
 
 ```bash
-ng e2e
+pnpm ng generate component pages/nombre/nombre
+pnpm ng generate service core/services/nombre
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+> Los módulos **no son standalone** — registra los nuevos componentes en su `*.module.ts`.
 
-## Additional Resources
+---
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Build de producción
+
+```bash
+pnpm build
+```
+
+Salida en `dist/frontend/browser/`. Esa carpeta es la que Capacitor copia al proyecto Android (`cap copy android`).
+
+---
+
+## Recursos
+
+- [Angular CLI](https://angular.dev/tools/cli)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Capacitor](https://capacitorjs.com/docs)
+- Para despliegue en Android ver [`ANDROID.md`](./ANDROID.md)

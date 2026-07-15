@@ -26,6 +26,7 @@ public class TecnoMovilDbContext : DbContext
     public DbSet<ProductoAtributo> ProductoAtributos { get; set; }
     public DbSet<AnalisisIA> AnalisisIA { get; set; }
     public DbSet<DetalleAnalisisIA> DetalleAnalisisIA { get; set; }
+    public DbSet<CodigoRecuperacion> CodigosRecuperacion { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -216,5 +217,16 @@ public class TecnoMovilDbContext : DbContext
             .WithMany()
             .HasForeignKey(d => d.IdProducto)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // CodigoRecuperacion -> Usuario (Cascade: se borran los códigos si se borra el usuario)
+        modelBuilder.Entity<CodigoRecuperacion>()
+            .HasOne(c => c.Usuario)
+            .WithMany()
+            .HasForeignKey(c => c.IdUsuario)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CodigoRecuperacion>()
+            .HasIndex(c => new { c.IdUsuario, c.FechaCreacion })
+            .HasDatabaseName("IX_CodigoRecuperacion_usuario_fecha");
     }
 }

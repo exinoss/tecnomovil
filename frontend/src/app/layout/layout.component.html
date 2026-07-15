@@ -1,17 +1,24 @@
 <div class="h-screen bg-gray-50 flex flex-col overflow-hidden">
   <!-- Header sticky -->
-  <app-header (toggleSidebar)="toggleSidebar()" class="flex-shrink-0"></app-header>
+  <app-header (toggleSidebar)="toggleSidebar()" class="shrink-0"></app-header>
 
   <div class="flex flex-1 overflow-hidden">
     <!-- Sidebar -->
     <app-sidebar [isOpen]="sidebarOpen" (closeSidebar)="sidebarOpen = false"></app-sidebar>
 
+    <!-- Backdrop para cerrar sidebar al tocar fuera -->
+    <div *ngIf="sidebarOpen"
+         class="fixed inset-0 bg-black/50 z-20"
+         (click)="sidebarOpen = false"></div>
+
     <!-- Contenido principal — solo el main hace scroll -->
-    <main
-      class="flex-1 overflow-y-auto p-6 transition-all duration-300"
+    <ion-content
+      class="flex-1 transition-all duration-300"
       [style.margin-left]="sidebarOpen ? '256px' : '0'"
     >
-      <router-outlet></router-outlet>
-    </main>
+      <main class="p-6">
+        <router-outlet></router-outlet>
+      </main>
+    </ion-content>
   </div>
 </div>

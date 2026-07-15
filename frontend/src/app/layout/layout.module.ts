@@ -5,9 +5,10 @@ import { LayoutComponent } from './layout.component';
 import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { RouterModule } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
 
 @NgModule({
   declarations: [LayoutComponent, HeaderComponent, SidebarComponent],
-  imports: [SharedModule, LayoutRoutingModule, RouterModule]
+  imports: [SharedModule, LayoutRoutingModule, RouterModule, IonicModule]
 })
 export class LayoutModule {}
