@@ -16,6 +16,7 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 - Se establece pnpm 11 como gestor de dependencias del frontend.
 - Las pruebas de Karma se ejecutan sin modo watch en CI y usan ChromeHeadless.
+- Las pruebas de componentes aíslan servicios externos e importan las dependencias de plantilla necesarias.
 
 ## [1.0.0] - Pendiente de publicación
 
