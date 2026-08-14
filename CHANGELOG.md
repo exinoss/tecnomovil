@@ -10,10 +10,12 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 - Artefactos iniciales de Gestión de Configuración de Software (GCS).
 - Validación continua para el backend y el frontend.
+- Compatibilidad de Karma con el builder de Angular para las pruebas automatizadas.
 
 ### Changed
 
 - Se establece pnpm 11 como gestor de dependencias del frontend.
+- Las pruebas de Karma se ejecutan sin modo watch en CI y usan ChromeHeadless.
 
 ## [1.0.0] - Pendiente de publicación
 

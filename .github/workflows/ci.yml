@@ -68,4 +68,6 @@ jobs:
 
       - name: Test
         working-directory: frontend
-        run: pnpm test
+        env:
+          CI: true
+        run: pnpm test --watch=false
