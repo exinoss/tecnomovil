@@ -68,4 +68,4 @@ jobs:
 
       - name: Test
         working-directory: frontend
-        run: pnpm test -- --watch=false --browsers=ChromeHeadless
+        run: pnpm test

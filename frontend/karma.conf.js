@@ -1,4 +1,6 @@
 ﻿module.exports = function (config) {
+  const isCi = Boolean(process.env.CI);
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -29,14 +31,14 @@
         { type: 'text-summary' }
       ]
     },
-    reporters: ['progress', 'kjhtml'],
+    reporters: isCi ? ['progress'] : ['progress', 'kjhtml'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
-    autoWatch: true,
-    browsers: ['Chrome'],
-    singleRun: false,
-    restartOnFileChange: true,
+    autoWatch: !isCi,
+    browsers: isCi ? ['ChromeHeadless'] : ['Chrome'],
+    singleRun: isCi,
+    restartOnFileChange: !isCi,
     listenAddress: 'localhost',
     hostname: 'localhost'
   });
