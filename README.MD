@@ -10,7 +10,7 @@ Aplicación web para gestión de reparaciones, ventas, inventario y clientes par
 ## Requisitos previos
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- [Node.js 20+](https://nodejs.org/) y npm
+- [Node.js 20+](https://nodejs.org/) y pnpm 11
 - SQL Server (local o remoto)
 
 ---
@@ -134,7 +134,7 @@ export const environment = {
 Abre una terminal dentro de la carpeta `frontend/` y ejecuta:
 
 ```bash
-npm install
+pnpm install --frozen-lockfile
 ```
 
 ---
