@@ -8,7 +8,7 @@
         <a [routerLink]="item.route"
            routerLinkActive="bg-blue-50 text-blue-600 border-r-2 border-blue-600"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm font-medium"
-           >
+           (click)="closeSidebar.emit()">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="item.icon" />
           </svg>
