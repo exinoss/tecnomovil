@@ -17,6 +17,12 @@ export interface UsuarioInfo {
   rol: string;
 }
 
+/** Sesión guardada localmente para el acceso rápido por huella o PIN (ver BiometricService/PinService). */
+export interface SesionGuardada {
+  token: string;
+  usuario: UsuarioInfo;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;

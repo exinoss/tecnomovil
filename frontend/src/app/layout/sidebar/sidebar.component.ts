@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../core/services/auth.service';
 
 interface MenuItem {
@@ -6,6 +7,7 @@ interface MenuItem {
   icon: string;
   route: string;
   roles: string[];
+  soloNativo?: boolean;
 }
 
 @Component({
@@ -32,13 +34,16 @@ export class SidebarComponent {
     { label: 'Categorías',     icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z', route: '/categorias',  roles: ['Admin'] },
     { label: 'Usuarios',       icon: 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z', route: '/usuarios',    roles: ['Admin'] },
     { label: 'Configuración',  icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', route: '/configuracion', roles: ['Admin'] },
+    { label: 'Seguridad',      icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', route: '/seguridad', roles: ['Admin', 'Vendedor', 'Tecnico'], soloNativo: true },
   ];
 
   constructor(private authService: AuthService) {}
 
   get filteredMenu(): MenuItem[] {
     const rol = this.authService.getRol();
-    return this.menuItems.filter(item => item.roles.includes(rol));
+    return this.menuItems.filter(item =>
+      item.roles.includes(rol) && (!item.soloNativo || Capacitor.isNativePlatform())
+    );
   }
 
   logout(): void {

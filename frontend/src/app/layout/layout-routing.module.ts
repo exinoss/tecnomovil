@@ -78,6 +78,12 @@ const routes: Routes = [
         loadChildren: () => import('../pages/dashboard/dashboard-module').then(m => m.DashboardModule),
         canActivate: [RoleGuard],
         data: { roles: ['Admin', 'Vendedor', 'Tecnico'] }
+      },
+      {
+        path: 'seguridad',
+        loadChildren: () => import('../pages/seguridad/seguridad.module').then(m => m.SeguridadModule),
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'Vendedor', 'Tecnico'] }
       }
     ]
   }
