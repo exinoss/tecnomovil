@@ -25,12 +25,17 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, dto).pipe(
       tap(res => {
         if (res.success && res.token && res.usuario) {
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('usuario', JSON.stringify(res.usuario));
-          this.usuarioSubject.next(res.usuario);
+          this.restaurarSesion(res.token, res.usuario);
         }
       })
     );
+  }
+
+  /** Guarda una sesión ya emitida por el backend (login normal o desbloqueo biométrico). */
+  restaurarSesion(token: string, usuario: UsuarioInfo): void {
+    localStorage.setItem('token', token);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+    this.usuarioSubject.next(usuario);
   }
 
   solicitarCodigo(correo: string): Observable<AuthResponse> {

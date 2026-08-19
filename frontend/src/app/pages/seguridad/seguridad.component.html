@@ -1,0 +1,54 @@
+<div class="space-y-4 max-w-lg">
+  <h2 class="text-xl font-bold text-gray-800">Seguridad</h2>
+
+  <div *ngIf="loading" class="text-center py-8 text-gray-500">Cargando...</div>
+
+  <div *ngIf="!loading && !esNativo" class="bg-white rounded-lg shadow p-6 text-sm text-gray-500">
+    El acceso rápido con huella o PIN solo está disponible en la app móvil.
+  </div>
+
+  <ng-container *ngIf="!loading && esNativo">
+    <!-- Huella / Rostro -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-semibold text-gray-800">Acceso con huella o rostro</h3>
+          <p class="text-sm text-gray-500 mt-0.5">
+            Al reabrir la app podrás ingresar con tu huella o rostro en vez de escribir tu contraseña.
+          </p>
+        </div>
+        <button (click)="toggleBiometria()" [disabled]="!biometriaDisponible || cambiandoBiometria"
+                class="shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40"
+                [ngClass]="biometriaActiva ? 'bg-blue-600' : 'bg-gray-300'">
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                [ngClass]="biometriaActiva ? 'translate-x-6' : 'translate-x-1'"></span>
+        </button>
+      </div>
+      <p *ngIf="!biometriaDisponible" class="text-xs text-amber-600 mt-3">
+        Este dispositivo no tiene huella ni rostro configurado, o la app no puede acceder a ellos.
+      </p>
+    </div>
+
+    <!-- PIN / patrón / contraseña del celular -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-semibold text-gray-800">Acceso con el PIN de mi celular</h3>
+          <p class="text-sm text-gray-500 mt-0.5">
+            Usa el mismo PIN, patrón o contraseña con el que desbloqueas tu celular. No se configura nada aparte: Android se encarga.
+          </p>
+        </div>
+        <button (click)="togglePin()" [disabled]="!pinDisponible || cambiandoPin"
+                class="shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40"
+                [ngClass]="pinActivo ? 'bg-blue-600' : 'bg-gray-300'">
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                [ngClass]="pinActivo ? 'translate-x-6' : 'translate-x-1'"></span>
+        </button>
+      </div>
+      <p *ngIf="!pinDisponible" class="text-xs text-amber-600 mt-3">
+        Este celular no tiene PIN, patrón ni contraseña configurados en su pantalla de bloqueo,
+        o su versión de Android es anterior a la 11 y no permite esta opción por separado de la huella.
+      </p>
+    </div>
+  </ng-container>
+</div>
