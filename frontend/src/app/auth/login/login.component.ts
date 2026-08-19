@@ -126,8 +126,14 @@ export class LoginComponent {
   private async ofrecerConfigurarAccesosRapidos(): Promise<void> {
     if (!this.biometricService.isNative()) return;
 
-    const faltaBiometria = (await this.biometricService.isAvailable()) && !(await this.biometricService.isEnabled());
-    const faltaPin = (await this.pinService.isAvailable()) && !(await this.pinService.isEnabled());
+    const [biometriaDisponible, biometriaActiva, pinDisponible, pinActivo] = await Promise.all([
+      this.biometricService.isAvailable(),
+      this.biometricService.isEnabled(),
+      this.pinService.isAvailable(),
+      this.pinService.isEnabled()
+    ]);
+    const faltaBiometria = biometriaDisponible && !biometriaActiva;
+    const faltaPin = pinDisponible && !pinActivo;
     if (!faltaBiometria && !faltaPin) return;
 
     const alert = await this.alertController.create({
