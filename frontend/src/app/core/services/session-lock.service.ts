@@ -6,14 +6,6 @@ import { BiometricService } from './biometric.service';
 /** Minutos que la app puede estar en segundo plano antes de exigir volver a autenticarse. */
 const MINUTOS_INACTIVIDAD = 5;
 
-/**
- * Exige volver a pasar por /auth cuando la app nativa estuvo en segundo plano más de
- * MINUTOS_INACTIVIDAD, o al reabrirla desde cero (proceso matado, celular reiniciado) —
- * no en cada cambio de primer/segundo plano, para no cerrar la sesión solo por minimizar
- * un momento. Cerrar sesión, borrar datos de la app o matar el proceso también la exigen,
- * de forma natural, sin código adicional: en esos casos no queda token o sesión válida.
- * En web de escritorio queda inactivo.
- */
 @Injectable({ providedIn: 'root' })
 export class SessionLockService {
   private desbloqueada: boolean;

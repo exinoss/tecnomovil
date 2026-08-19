@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,7 +15,7 @@ type Vista = 'selector' | 'password';
   standalone: false,
   templateUrl: './login.component.html'
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   vista: Vista = 'password';
   mostrarSelector = false;
   mostrarTileBiometria = false;
@@ -41,15 +41,18 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  async ngOnInit(): Promise<void> {
+  /** ionViewWillEnter (no ngOnInit): se dispara cada vez que se vuelve a esta página, incluida la reutilización de vista del ion-router-outlet tras cerrar sesión. */
+  async ionViewWillEnter(): Promise<void> {
+    this.identificacion = '';
+    this.password = '';
+
     if (this.biometricService.isNative()) {
       this.mostrarTileBiometria = await this.biometricService.isEnabled();
       this.mostrarTilePin = await this.pinService.isEnabled();
     }
-    if (this.mostrarTileBiometria || this.mostrarTilePin) {
-      this.mostrarSelector = true;
-      this.vista = 'selector';
-    }
+
+    this.mostrarSelector = this.mostrarTileBiometria || this.mostrarTilePin;
+    this.vista = this.mostrarSelector ? 'selector' : 'password';
   }
 
   irA(vista: Vista): void {

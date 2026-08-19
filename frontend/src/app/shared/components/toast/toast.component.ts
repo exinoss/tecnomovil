@@ -5,7 +5,7 @@ import { ToastService, Toast } from './toast.service';
   selector: 'app-toast',
   standalone: false,
   template: `
-    <div class="fixed bottom-6 right-6 flex flex-col gap-3 w-full max-w-sm" style="z-index:9999">
+    <div class="fixed bottom-4 left-4 right-4 sm:left-auto sm:bottom-6 sm:right-6 flex flex-col gap-3 w-auto sm:w-full sm:max-w-sm" style="z-index:9999">
       <div
         *ngFor="let toast of toasts"
         [attr.id]="getToastId(toast.type)"

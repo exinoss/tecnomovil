@@ -50,11 +50,7 @@ export class BiometricService {
     await Preferences.remove({ key: PREF_KEY_ENABLED });
   }
 
-  /**
-   * Diálogo nativo de huella/rostro (biometría pura, sin mezclar el PIN del sistema:
-   * el PIN de esta app es un método independiente, ver PinService). Si se valida,
-   * recupera la sesión guardada.
-   */
+  /** Solo biometría: el PIN del dispositivo es un método aparte, ver PinService. */
   async desbloquear(): Promise<SesionGuardada | null> {
     try {
       await NativeBiometric.verifyIdentity({

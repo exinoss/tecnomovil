@@ -13,12 +13,6 @@ const CREDENTIAL_USERNAME = 'tecnomovil-session-pin';
 /** Android solo permite pedir el PIN/patrón/contraseña sin mezclar biometría desde la API 30 (Android 11). */
 const ANDROID_SDK_MINIMO = 30;
 
-/**
- * Desbloqueo con el PIN, patrón o contraseña que el usuario ya tenga configurado en su
- * celular (BiometryType.DEVICE_CREDENTIAL), sin mezclar biometría: es un método aparte de
- * BiometricService. Android muestra su propio diálogo de bloqueo, sea cual sea el método
- * que el usuario eligió en el sistema.
- */
 @Injectable({ providedIn: 'root' })
 export class PinService {
 
