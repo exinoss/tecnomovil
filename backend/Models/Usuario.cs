@@ -42,6 +42,12 @@ public class Usuario
     [Column("activo")]
     public bool Activo { get; set; } = true;
 
+    [Column("intentos_fallidos")]
+    public int IntentosFallidos { get; set; } = 0;
+
+    [Column("bloqueado_hasta")]
+    public DateTime? BloqueadoHasta { get; set; }
+
     // Navigation
     public virtual ICollection<Reparacion> Reparaciones { get; set; } = new List<Reparacion>();
     public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();

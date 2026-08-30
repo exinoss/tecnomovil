@@ -19,6 +19,8 @@ public class AuthController : ControllerBase
     private const int CodigosMaximosPorDia = 3;
     private const int IntentosMaximos = 5;
     private const int MinutosExpiracionCodigo = 5;
+    private const int IntentosMaximosLogin = 5;
+    private const int MinutosBloqueoLogin = 15;
 
     private readonly TecnoMovilDbContext _context;
     private readonly IConfiguration _configuration;
@@ -37,14 +39,42 @@ public class AuthController : ControllerBase
         var usuario = await _context.Usuarios
             .FirstOrDefaultAsync(u => u.Identificacion == loginDto.Identificacion && u.Activo);
 
+        if (usuario != null && usuario.BloqueadoHasta.HasValue && usuario.BloqueadoHasta.Value > DateTime.UtcNow)
+        {
+            var minutosRestantes = (int)Math.Ceiling((usuario.BloqueadoHasta.Value - DateTime.UtcNow).TotalMinutes);
+            return Ok(new LoginResponseDto
+            {
+                Success = false,
+                Message = $"Demasiados intentos fallidos. Intenta de nuevo en {minutosRestantes} minuto(s).",
+                Bloqueado = true,
+                MinutosRestantes = minutosRestantes
+            });
+        }
+
         if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash))
         {
+            // Solo se cuenta el intento cuando el usuario existe: no penalizamos ni damos pistas
+            // sobre identificaciones inexistentes.
+            if (usuario != null)
+            {
+                usuario.IntentosFallidos++;
+                if (usuario.IntentosFallidos >= IntentosMaximosLogin)
+                {
+                    usuario.BloqueadoHasta = DateTime.UtcNow.AddMinutes(MinutosBloqueoLogin);
+                }
+                await _context.SaveChangesAsync();
+            }
+
             return Ok(new LoginResponseDto
             {
                 Success = false,
                 Message = "Usuario o contraseña incorrecta"
             });
         }
+
+        usuario.IntentosFallidos = 0;
+        usuario.BloqueadoHasta = null;
+        await _context.SaveChangesAsync();
 
         var token = GenerateJwtToken(usuario);
 
