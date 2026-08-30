@@ -6,6 +6,12 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-30
+
+### Fixed
+
+- `app.spec.ts` vuelve a pasar en CI: se mockean `SessionLockService` y `BackButtonService` en lugar de requerir un `HttpClient` real. Ver `documentacion/gcs/releases/v1.1.1.md`.
+
 ## [1.1.0] - 2026-08-19
 
 ### Added
