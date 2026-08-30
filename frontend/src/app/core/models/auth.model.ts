@@ -8,6 +8,8 @@ export interface LoginResponse {
   message: string;
   token?: string;
   usuario?: UsuarioInfo;
+  bloqueado?: boolean;
+  minutosRestantes?: number;
 }
 
 export interface UsuarioInfo {

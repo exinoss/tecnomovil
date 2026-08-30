@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,7 +15,7 @@ type Vista = 'selector' | 'password';
   standalone: false,
   templateUrl: './login.component.html'
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
   vista: Vista = 'password';
   mostrarSelector = false;
   mostrarTileBiometria = false;
@@ -26,6 +26,10 @@ export class LoginComponent {
   password = '';
   loading = false;
   showPassword = false;
+
+  /** Segundos restantes de bloqueo tras exceder los intentos fallidos de login (0 = sin bloqueo). */
+  bloqueadoSegundosRestantes = 0;
+  private bloqueoIntervalId?: ReturnType<typeof setInterval>;
 
   constructor(
     private authService: AuthService,
@@ -92,6 +96,8 @@ export class LoginComponent {
   }
 
   onSubmit(): void {
+    if (this.bloqueadoSegundosRestantes > 0) return;
+
     if (!this.identificacion || !this.password) {
       this.toast.show('Complete todos los campos', 'warning');
       return;
@@ -108,6 +114,9 @@ export class LoginComponent {
             await this.ofrecerConfigurarAccesosRapidos();
           } else {
             this.toast.show(res.message, 'error');
+            if (res.bloqueado && res.minutosRestantes) {
+              this.iniciarContadorBloqueo(res.minutosRestantes);
+            }
           }
         },
         error: () => {
@@ -115,6 +124,36 @@ export class LoginComponent {
           this.toast.show('Error de conexión con el servidor', 'error');
         }
       });
+  }
+
+  /** mm:ss restantes de bloqueo, para mostrar en el botón de envío. */
+  get bloqueoTiempoFormateado(): string {
+    const minutos = Math.floor(this.bloqueadoSegundosRestantes / 60);
+    const segundos = this.bloqueadoSegundosRestantes % 60;
+    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+  }
+
+  private iniciarContadorBloqueo(minutos: number): void {
+    this.detenerContadorBloqueo();
+    this.bloqueadoSegundosRestantes = minutos * 60;
+    this.bloqueoIntervalId = setInterval(() => {
+      this.bloqueadoSegundosRestantes--;
+      if (this.bloqueadoSegundosRestantes <= 0) {
+        this.detenerContadorBloqueo();
+      }
+    }, 1000);
+  }
+
+  private detenerContadorBloqueo(): void {
+    if (this.bloqueoIntervalId) {
+      clearInterval(this.bloqueoIntervalId);
+      this.bloqueoIntervalId = undefined;
+    }
+    this.bloqueadoSegundosRestantes = 0;
+  }
+
+  ngOnDestroy(): void {
+    this.detenerContadorBloqueo();
   }
 
   private completarSesion(token: string, usuario: UsuarioInfo): void {
