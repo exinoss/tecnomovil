@@ -20,6 +20,15 @@ Controlar de forma trazable los cambios de TecnoMovil para que cada release pued
 
 Ninguna persona aprueba su propio pull request. Los cambios de base de datos, seguridad, despliegue o release necesitan la validación técnica del responsable del área y la verificación de QA.
 
+## Metodología de trabajo
+
+El equipo usa **Kanban** sobre GitHub Projects (comparativa completa en `documentacion/gcs/metodologia/MATRIZ-DECISION.md`). Se eligió sobre Scrum porque con 3 integrantes y carga académica variable, la trazabilidad `issue → PR → commit → tag` y la adaptación a un ritmo irregular pesan más que la ceremonia de sprints fijos.
+
+- **Columnas:** `To Do` / `Doing` / `Done`.
+- **Límite de trabajo en curso (WIP):** 2 tarjetas en `Doing` por integrante.
+- **Tarjeta = issue de GitHub.** Toda tarjeta que pase a `Doing` debe tener rama asociada; toda tarjeta en `Done` debe tener PR mergeado y, si corresponde, tag de release.
+- **Definición de "Done":** PR aprobado por alguien distinto al autor, CI en verde, y `CHANGELOG.md`/checklist de release actualizados si el cambio se libera.
+
 ## Elementos de configuración
 
 | ID | Elemento | Ubicación | Responsable | Control requerido |
@@ -73,7 +82,14 @@ Se usa `vMAJOR.MINOR.PATCH`:
 - **MINOR:** nueva funcionalidad compatible.
 - **PATCH:** corrección compatible, seguridad o mantenimiento.
 
-La primera línea base es `v1.0.0`: TecnoMovil ya integra módulos de negocio, API .NET, frontend Angular/Ionic, Android, migraciones, scripts SQL y Docker. No se crea el tag hasta que la checklist [`releases/v1.0.0.md`](releases/v1.0.0.md) esté aprobada.
+La primera línea base es `v1.0.0`, etiquetada sobre `3c48404` (previo a la integración de biometría): TecnoMovil ya integra módulos de negocio, API .NET, frontend Angular/Ionic, migraciones, scripts SQL y Docker. Ningún tag se crea hasta que su checklist en [`releases/`](releases/) esté aprobada.
+
+| Versión | Commit | Cambio | Checklist |
+| --- | --- | --- | --- |
+| `v1.0.0` | `3c48404` | Línea base funcional (pre-GCS formal) | [`releases/v1.0.0.md`](releases/v1.0.0.md) |
+| `v1.1.0` | `b6f1728` | Acceso biométrico y PIN en Android (PR #1) | [`releases/v1.1.0.md`](releases/v1.1.0.md) |
+| `v1.1.1` | — | Corrección de CI de frontend rota por `v1.1.0` (PR #2) | [`releases/v1.1.1.md`](releases/v1.1.1.md) |
+| `v1.2.0` | — | Bloqueo de login tras intentos fallidos (PR #3) | [`releases/v1.2.0.md`](releases/v1.2.0.md) |
 
 Al liberar una versión:
 
@@ -82,7 +98,7 @@ Al liberar una versión:
 3. Crear y publicar un tag anotado; los tags publicados no se modifican.
 
 ```bash
-git tag -a v1.0.0 -m "Baseline v1.0.0: primera línea base formal de TecnoMovil"
+git tag -a v1.0.0 3c48404 -m "Baseline v1.0.0: primera línea base formal de TecnoMovil"
 git push origin v1.0.0
 ```
 
