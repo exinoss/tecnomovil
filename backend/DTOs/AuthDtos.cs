@@ -17,6 +17,8 @@ public class LoginResponseDto
     public string Message { get; set; } = string.Empty;
     public string? Token { get; set; }
     public UsuarioInfoDto? Usuario { get; set; }
+    public bool Bloqueado { get; set; }
+    public int? MinutosRestantes { get; set; }
 }
 
 public class UsuarioInfoDto
