@@ -6,6 +6,12 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-30
+
+### Added
+
+- Bloqueo de login tras 5 intentos fallidos consecutivos (15 minutos), reutilizando el mismo patrón ya usado en la recuperación de contraseña. El frontend muestra una cuenta regresiva mientras dura el bloqueo. Ver `documentacion/gcs/cambios/RFC-001-bloqueo-login.md` y `documentacion/gcs/releases/v1.2.0.md`.
+
 ## [1.1.1] - 2026-08-30
 
 ### Fixed
