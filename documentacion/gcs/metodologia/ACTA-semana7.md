@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | Henry Álvarez | Líder de configuración + QA/validación | Baseline, tags y releases (`v1.0.0`…`v1.2.0`), checklists de release firmadas | Tags y GitHub Releases del repositorio; checklists en `documentacion/gcs/releases/` |
 | Juan Ramírez | Responsable de control de cambios | RFC-001 y backend del bloqueo de login (Issue #3, PR #3) | RFC en `documentacion/gcs/cambios/RFC-001-bloqueo-login.md`; Issue #3; PR #3 |
-| Jeremy Haro | Responsable de trazabilidad | Corrección de la CI de frontend (Issue #2, PR #2) y tablero Kanban con tarjetas enlazadas | Issue #2; PR #2; tablero en GitHub Projects |
+| Jeremy Haro | Responsable de trazabilidad | Corrección de la CI de frontend (Issue #3, PR #4) y tablero Kanban con tarjetas enlazadas | Issue #3; PR #4; tablero en GitHub Projects |
 
 Henry Álvarez asume doble rol (líder de configuración y QA) porque el `CM_PLAN.md` ya lo designa como responsable de QA y como la única persona autorizada a crear y publicar tags — mantener ambos roles en la misma persona evita una autoridad de release repartida sin dueño claro.
 
@@ -20,6 +20,6 @@ Cada fila de esta acta se verifica con un enlace real, no con una descripción:
 
 - El trabajo de Henry se confirma en la pestaña *Releases* del repositorio y en los archivos de `documentacion/gcs/releases/`.
 - El trabajo de Juan se confirma en el Issue #3, el RFC-001 y el PR #3, todos con su cuenta como autor.
-- El trabajo de Jeremy se confirma en el Issue #2, el PR #2, y en el tablero de GitHub Projects con las tarjetas de esta semana.
+- El trabajo de Jeremy se confirma en el Issue #3, el PR #4, y en el tablero de GitHub Projects con las tarjetas de esta semana.
 
 Si alguna evidencia no coincide con lo declarado aquí, esta acta queda desactualizada y debe corregirse antes de la entrega — no al revés.

@@ -88,7 +88,7 @@ La primera línea base es `v1.0.0`, etiquetada sobre `3c48404` (previo a la inte
 | --- | --- | --- | --- |
 | `v1.0.0` | `3c48404` | Línea base funcional (pre-GCS formal) | [`releases/v1.0.0.md`](releases/v1.0.0.md) |
 | `v1.1.0` | `b6f1728` | Acceso biométrico y PIN en Android (PR #1) | [`releases/v1.1.0.md`](releases/v1.1.0.md) |
-| `v1.1.1` | — | Corrección de CI de frontend rota por `v1.1.0` (PR #2) | [`releases/v1.1.1.md`](releases/v1.1.1.md) |
+| `v1.1.1` | — | Corrección de CI de frontend rota por `v1.1.0` (Issue #3, PR #4) | [`releases/v1.1.1.md`](releases/v1.1.1.md) |
 | `v1.2.0` | — | Bloqueo de login tras intentos fallidos (PR #3) | [`releases/v1.2.0.md`](releases/v1.2.0.md) |
 
 Al liberar una versión:
