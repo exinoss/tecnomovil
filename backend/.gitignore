@@ -8,6 +8,9 @@
 *.userosscache
 *.sln.docstates
 
+wwwroot/uploads/
+
+
 # Mono auto generated files
 mono_crash.*
 
